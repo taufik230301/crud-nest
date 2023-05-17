@@ -16,7 +16,7 @@ import { ContactsService } from './contact.service';
 import { AuthGuard } from 'src/auth/auth.guard';
 import CreateContactsDto from './dto/createContacts.dto';
 import UpdateContactsDto from './dto/updateContacts.dto';
-
+import { IsString } from 'class-validator';
 @Controller('contacts')
 export class ContactsController {
   constructor(private readonly contactsService: ContactsService) {}
@@ -36,8 +36,24 @@ export class ContactsController {
       contacts_name,
     );
 
-    if (contact) {
-      return contact;
+    if (contact.status == 200) {
+      return {
+        message: 'Succesfully Get Data',
+        statusCode: contact.status,
+        data: contact.data,
+      };
+    } else if (contact.status == 204) {
+      return {
+        message: 'Succesfully But Get No Data',
+        statusCode: contact.status,
+        data: contact.data,
+      };
+    } else if (contact.status == 500) {
+      return {
+        message: 'Error Get Data',
+        statusCode: contact.status,
+        data: contact.data,
+      };
     }
   }
 
@@ -48,13 +64,22 @@ export class ContactsController {
     @Body() contacts: CreateContactsDto,
     @Req() request: any,
   ) {
-    const contact = await this.contactsService.createContacts(
-      contacts,
-      request.user.user_id,
-    );
+    const { user_id } = request.user;
+    const contact_data = { ...contacts, user_id };
+    const contact = await this.contactsService.createContacts(contact_data);
 
-    if (contact) {
-      return contact;
+    if (contact.status == 200) {
+      return {
+        message: 'Succesfully Create Data',
+        status: contact.status,
+        data: contact.data,
+      };
+    } else {
+      return {
+        message: 'Error Create Data',
+        status: contact.status,
+        data: contact.data,
+      };
     }
   }
 
@@ -62,7 +87,8 @@ export class ContactsController {
   @Put(':id_contacts')
   @UsePipes(new ValidationPipe({}))
   async updateContacts(
-    @Param('id_contacts') id_contacts: string,
+    @Param('id_contacts')
+    id_contacts: string,
     @Body() contacts: UpdateContactsDto,
     @Req() request,
   ) {
@@ -71,8 +97,37 @@ export class ContactsController {
       contacts,
       request.user.user_id,
     );
-    if (contact) {
-      return contact;
+
+    if (contact.status == 200) {
+      return {
+        message: 'Succesfully Update Data',
+        statusCode: contact.status,
+        data: contact.data,
+      };
+    } else if (contact.status == 404) {
+      return {
+        message: 'Error Update Data',
+        statusCode: contact.status,
+        data: contact.data,
+      };
+    } else if (contact.status == 204) {
+      return {
+        message: 'Error Update Data Doesnt Exist',
+        statusCode: contact.status,
+        data: contact.data,
+      };
+    } else if (contact.status == 403) {
+      return {
+        message: 'Error Update Data, Permission Denied',
+        statusCode: contact.status,
+        data: contact.data,
+      };
+    } else if (contact.status == 500) {
+      return {
+        message: 'Error Update Data',
+        statusCode: contact.status,
+        data: contact.data,
+      };
     }
   }
 
@@ -86,8 +141,36 @@ export class ContactsController {
       String(id_contacts),
       request.user.user_id,
     );
-    if (contact) {
-      return contact;
+    if (contact.status == 200) {
+      return {
+        message: 'Succesfully Delete Data',
+        statusCode: '200',
+        data: contact.data,
+      };
+    } else if (contact.status == 404) {
+      return {
+        message: 'Error Delete Data',
+        statusCode: '500',
+        data: contact.data,
+      };
+    } else if (contact.status == 403) {
+      return {
+        message: 'Error Delete Data, Permission Denied',
+        statusCode: '500',
+        data: contact.data,
+      };
+    } else if (contact.status == 204) {
+      return {
+        message: 'Error Delete Data, Data Doesnt Exist',
+        statusCode: '500',
+        data: contact.data,
+      };
+    } else if (contact.status == 500) {
+      return {
+        message: 'Error When Delete Data',
+        statusCode: '500',
+        data: contact.data,
+      };
     }
   }
 
@@ -102,8 +185,30 @@ export class ContactsController {
       request.user.user_id,
     );
 
-    if (contact) {
-      return contact;
+    if (contact.status == 200) {
+      return {
+        message: 'Succesfully Get Data',
+        statusCode: '200',
+        data: contact.data,
+      };
+    } else if (contact.status == 204) {
+      return {
+        message: 'Succesfully But Get No Data',
+        statusCode: '500',
+        data: contact.data,
+      };
+    } else if (contact.status == 403) {
+      return {
+        message: 'Error Get Data, Permission Denied',
+        statusCode: '500',
+        data: contact.data,
+      };
+    } else if (contact.status == 500) {
+      return {
+        message: 'Error When Get Data',
+        statusCode: '500',
+        data: contact.data,
+      };
     }
   }
 }
