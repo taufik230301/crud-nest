@@ -16,26 +16,31 @@ export class AuthGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
+    this.logger.debug('Extracted request object from execution context');
     const token = this.extractTokenFromHeader(request);
+    this.logger.debug('Extracted token from the request header');
     if (!token) {
+      this.logger.warn('Authorization token not provided');
       throw new UnauthorizedException();
     }
     try {
       const payload = await this.jwtService.verifyAsync(token, {
         secret: jwtConstants.secret,
       });
+      this.logger.debug('Token verified successfully');
       request['user'] = payload;
-
-      this.logger.log(`Success Auth`);
+      this.logger.debug('Assigned payload to the request object');
     } catch {
-      this.logger.log(`Cannot Login,Wrong Auth`);
+      this.logger.warn('Invalid authorization token');
       throw new UnauthorizedException();
     }
+    this.logger.debug('User is authorized');
     return true;
   }
 
   private extractTokenFromHeader(request: Request): string | undefined {
     const [type, token] = request.headers.authorization?.split(' ') ?? [];
+    this.logger.debug('Extracted token from the Authorization header');
     return type === 'Bearer' ? token : undefined;
   }
 }
