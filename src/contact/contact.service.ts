@@ -27,6 +27,7 @@ export class ContactsService {
     };
 
     this.logger.log('Creating queryRunner.');
+    this.logger.log('Creating queryRunner.');
     const queryRunner = this.dataSource.createQueryRunner();
 
     try {
@@ -59,6 +60,7 @@ export class ContactsService {
 
   async createContacts(contacts: CreateContactsDto) {
     this.logger.log('createContacts function called.');
+    this.logger.log('Creating queryRunner.');
     const queryRunner = this.dataSource.createQueryRunner();
     try {
       this.logger.log('Establishing database connection.');
@@ -92,34 +94,47 @@ export class ContactsService {
   }
 
   async getContactsById(id_contacts: string, user_id: number) {
+    this.logger.log('getContactsById function called.');
+    this.logger.log('Creating options object');
     const options: FindManyOptions<Contacts> = {
       where: {
         id_contacts: id_contacts,
         user_id: user_id,
       },
     };
+    this.logger.log('Creating queryRunner.');
     const queryRunner = this.dataSource.createQueryRunner();
     try {
+      this.logger.log('Establishing database connection.');
       await queryRunner.connect();
+      this.logger.log('Starting database transaction.');
       await queryRunner.startTransaction();
       const contacts = await queryRunner.manager.find(Contacts, options);
-
+      this.logger.log('Query executed');
       if (contacts.length > 0) {
         if (contacts[0].user_id == user_id) {
+          this.logger.log('Committing database transaction.');
           await queryRunner.commitTransaction();
           return { data: contacts, status: 200 };
         } else {
+          this.logger.log('Rolling back database transaction.');
           await queryRunner.rollbackTransaction();
           return { data: contacts, status: 403 };
         }
       } else {
+        this.logger.log('Rolling back database transaction.');
         await queryRunner.rollbackTransaction();
         return { data: contacts, status: 204 };
       }
     } catch (err) {
+      this.logger.log(
+        'Error occurred. Rolling back database transaction.',
+        err,
+      );
       await queryRunner.rollbackTransaction();
       return { data: err, status: 500 };
     } finally {
+      this.logger.log('Releasing database query runner.');
       await queryRunner.release(); // Release the queryRunner after using it
     }
   }
@@ -129,18 +144,24 @@ export class ContactsService {
     contacts: UpdateContactsDto,
     user_id: number,
   ) {
+    this.logger.log('updateContacts function called.');
+    this.logger.log('Creating options object');
     const options: FindManyOptions<Contacts> = {
       where: {
         id_contacts: id_contacts,
       },
     };
+    this.logger.log('Creating queryRunner.');
     const queryRunner = this.dataSource.createQueryRunner();
     try {
+      this.logger.log('Establishing database connection.');
       await queryRunner.connect();
+      this.logger.log('Starting database transaction.');
       await queryRunner.startTransaction();
       const currentContacts = await queryRunner.manager.find(Contacts, options);
       if (currentContacts.length > 0) {
         if (currentContacts[0].user_id == user_id) {
+          this.logger.log('Updating contacts in the database.');
           const updated_contact = await queryRunner.manager
             .createQueryBuilder()
             .update(Contacts)
@@ -149,42 +170,58 @@ export class ContactsService {
             .execute();
 
           if (updated_contact.affected) {
+            this.logger.log('Committing database transaction.');
             await queryRunner.commitTransaction();
             return { data: contacts, status: 200 };
           } else {
+            this.logger.log('Rolling back database transaction.');
             await queryRunner.rollbackTransaction();
             return { data: contacts, status: 404 };
           }
         } else {
+          this.logger.log('Rolling back database transaction.');
           await queryRunner.rollbackTransaction();
           return { data: contacts, status: 403 };
         }
       } else {
+        this.logger.log('Rolling back database transaction.');
         await queryRunner.rollbackTransaction();
         return { data: contacts, status: 204 };
       }
     } catch (err) {
+      this.logger.log(
+        'Error occurred. Rolling back database transaction.',
+        err,
+      );
       await queryRunner.rollbackTransaction();
       return { data: err, status: 500 };
     } finally {
+      this.logger.log('Releasing database query runner.');
       await queryRunner.release(); // Release the queryRunner after using it
     }
   }
 
   async deleteContact(id_contacts: string, user_id: number) {
+    this.logger.log('deleteContact function called.');
+    this.logger.log('Creating options object');
     const options: FindManyOptions<Contacts> = {
       where: {
         id_contacts: id_contacts,
       },
     };
+    this.logger.log('Creating queryRunner.');
     const queryRunner = this.dataSource.createQueryRunner();
     try {
+      this.logger.log('Establishing database connection.');
       await queryRunner.connect();
+      this.logger.log('Starting database transaction.');
       await queryRunner.startTransaction();
+      this.logger.log('Query executed');
       const deletedContacts = await queryRunner.manager.find(Contacts, options);
 
       if (deletedContacts.length > 0) {
         if (deletedContacts[0].user_id == user_id) {
+          this.logger.log('Deleting contact from the database.');
           const deleted = await queryRunner.manager
             .createQueryBuilder()
             .delete()
@@ -192,24 +229,33 @@ export class ContactsService {
             .where('id_contacts = :id', { id: id_contacts })
             .execute();
           if (deleted.affected > 0) {
+            this.logger.log('Committing database transaction.');
             await queryRunner.commitTransaction();
             return { data: deletedContacts, status: 200 };
           } else {
+            this.logger.log('Rolling back database transaction.');
             await queryRunner.rollbackTransaction();
             return { data: deletedContacts, status: 404 };
           }
         } else {
+          this.logger.log('Rolling back database transaction.');
           await queryRunner.rollbackTransaction();
           return { data: deletedContacts, status: 403 };
         }
       } else {
+        this.logger.log('Rolling back database transaction.');
         await queryRunner.rollbackTransaction();
         return { data: deletedContacts, status: 204 };
       }
     } catch (err) {
+      this.logger.log(
+        'Error occurred. Rolling back database transaction.',
+        err,
+      );
       await queryRunner.rollbackTransaction();
       return { data: err, status: 500 };
     } finally {
+      this.logger.log('Releasing database query runner.');
       await queryRunner.release(); // Release the queryRunner after using it
     }
   }
