@@ -17,6 +17,7 @@ import { ContactsService } from './contact.service';
 import { AuthGuard } from 'src/auth/auth.guard';
 import CreateContactsDto from './dto/createContacts.dto';
 import UpdateContactsDto from './dto/updateContacts.dto';
+
 @Controller('contacts')
 export class ContactsController {
   constructor(private readonly contactsService: ContactsService) {}
