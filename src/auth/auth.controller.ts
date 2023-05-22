@@ -6,7 +6,6 @@ import {
   HttpStatus,
   ValidationPipe,
   UsePipes,
-  Res,
   Logger,
 } from '@nestjs/common';
 import { AuthService } from '../auth/auth.service';
@@ -20,23 +19,36 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @Post('login')
   @UsePipes(new ValidationPipe({ transform: false }))
-  async signIn(@Body() users: LoginUsersDto, @Res() response: any) {
+  async signIn(@Body() users: LoginUsersDto) {
     try {
       this.logger.log(`Received login request for username: ${users.username}`);
       const result = await this.authService.signIn(
         users.username,
         users.password,
       );
-      this.logger.log(`User '${users.username}' successfully logged in`);
-      return response.status(HttpStatus.OK).json(result);
+
+      if (result.statusCode == 200) {
+        this.logger.log(`User '${users.username}' successfully logged in`);
+        return {
+          message: `Success Login`,
+          statusCode: result.statusCode,
+          access_token: result.access_token,
+        };
+      } else {
+        return {
+          message: result.message,
+          statusCode: result.statusCode,
+        };
+      }
     } catch (err) {
       this.logger.error(
         `Error occurred during login for username: ${users.username}`,
         err,
       );
-      return response
-        .status(HttpStatus.INTERNAL_SERVER_ERROR)
-        .json({ message: 'An error occurred during login' });
+      return {
+        message: `Error occurred during login for username: ${users.username}`,
+        statusCode: 500,
+      };
     }
   }
 }

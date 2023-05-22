@@ -11,30 +11,47 @@ export class AuthService {
   private readonly logger = new Logger(AuthService.name);
 
   async signIn(username: string, password: string): Promise<any> {
-    const user = await this.userService.getUserByUsername(username);
-    this.logger.log(`checking user '${username}' ...`);
+    try {
+      const user = await this.userService.getUserByUsername(username);
+      this.logger.log(`checking user '${username}' ...`);
 
-    if (user) {
-      this.logger.log(`user '${username}' exists`);
-      this.logger.log('checking password....');
-      if (user.password == password) {
-        this.logger.log('password match');
-        const payload = { user_level: user.user_level, user_id: user.user_id };
-        this.logger.log('creating token...');
-        const token: string = await this.jwtService.signAsync(payload);
-        this.logger.log('token created');
-        return {
-          message: 'Success',
-          statusCode: '200',
-          access_token: token,
-        };
+      if (user.status == 200) {
+        this.logger.log(`user '${username}' exists`);
+        this.logger.log('checking password....');
+        if (user.data.password == password) {
+          this.logger.log('password match');
+          const payload = {
+            user_level: user.data.user_level,
+            user_id: user.data.user_id,
+          };
+          this.logger.log('creating token...');
+          const token: string = await this.jwtService.signAsync(payload);
+          this.logger.log('token created');
+          return {
+            message: 'Success',
+            statusCode: 200,
+            access_token: token,
+          };
+        } else {
+          this.logger.log('password not match');
+          return {
+            message: `Cannot login, password doesn't match`,
+            statusCode: 500,
+          };
+        }
       } else {
-        this.logger.log('password not match');
-        throw new UnauthorizedException();
+        this.logger.log(`user '${username}' not exists`);
+        return {
+          message: `Cannot login, user '${username}' not exists`,
+          statusCode: 500,
+        };
       }
-    } else {
-      this.logger.log(`user '${username}' not exists`);
-      throw new UnauthorizedException();
+    } catch (error) {
+      this.logger.log(`Error occurred`);
+      return {
+        message: `Error occurred.`,
+        statusCode: 500,
+      };
     }
   }
 }
