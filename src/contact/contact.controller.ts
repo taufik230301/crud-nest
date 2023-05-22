@@ -22,6 +22,7 @@ import UpdateContactsDto from './dto/updateContacts.dto';
 export class ContactsController {
   constructor(private readonly contactsService: ContactsService) {}
   private readonly logger = new Logger(ContactsController.name);
+  contact_data: any;
   @UseGuards(AuthGuard)
   @Get()
   async getContacts(
@@ -34,6 +35,7 @@ export class ContactsController {
       this.logger.log('getContacts function called.');
       const contact = await this.contactsService.getAllContacts(
         request.user.user_id,
+        request.user.user_level,
         account_number,
         bank_name,
         contacts_name,
@@ -82,11 +84,29 @@ export class ContactsController {
       this.logger.log('Extracting user_id from request:', request.user);
       const { user_id } = request.user;
 
-      const contact_data = { ...contacts, user_id };
-      this.logger.log('Creating contact:', contact_data);
+      this.logger.log('Checking if permisions is admin');
+      if (request.user.user_level == 0) {
+        this.logger.log('Checking if user_id is null');
+        if (contacts.user_id) {
+          this.contact_data = contacts;
+          this.logger.log('Creating contact:', this.contact_data);
+        } else {
+          this.logger.log('An error occurred: user_id cannot be null');
+          return {
+            message: 'Error Create Data, user_id cannot be null',
+            status: 500,
+            data: [],
+          };
+        }
+      } else {
+        this.contact_data = { ...contacts, user_id };
+        this.logger.log('Creating contact:', this.contact_data);
+      }
 
       this.logger.log('createContacts function called.');
-      const contact = await this.contactsService.createContacts(contact_data);
+      const contact = await this.contactsService.createContacts(
+        this.contact_data,
+      );
 
       if (contact.status == 200) {
         this.logger.log('Successfully created data.');
@@ -128,6 +148,7 @@ export class ContactsController {
         String(id_contacts),
         contacts,
         request.user.user_id,
+        request.user.user_level,
       );
 
       if (contact.status == 200) {
@@ -187,40 +208,41 @@ export class ContactsController {
       const contact = await this.contactsService.deleteContact(
         String(id_contacts),
         request.user.user_id,
+        request.user.user_level,
       );
       if (contact.status == 200) {
         this.logger.log('Successfully deleted data.');
         return {
           message: 'Succesfully Delete Data',
-          statusCode: '200',
+          statusCode: contact.status,
           data: contact.data,
         };
       } else if (contact.status == 404) {
         this.logger.log('Error deleting data. Data not found.');
         return {
           message: 'Error Delete Data',
-          statusCode: '500',
+          statusCode: contact.status,
           data: contact.data,
         };
       } else if (contact.status == 403) {
         this.logger.log('Error deleting data. Permission denied.');
         return {
           message: 'Error Delete Data, Permission Denied',
-          statusCode: '500',
+          statusCode: contact.status,
           data: contact.data,
         };
       } else if (contact.status == 204) {
         this.logger.log('Error deleting data. Data does not exist.');
         return {
           message: 'Error Delete Data, Data Doesnt Exist',
-          statusCode: '500',
+          statusCode: contact.status,
           data: contact.data,
         };
       } else if (contact.status == 500) {
         this.logger.log('Error deleting data. Server error.');
         return {
           message: 'Error When Delete Data',
-          statusCode: '500',
+          statusCode: contact.status,
           data: contact.data,
         };
       }
@@ -245,34 +267,35 @@ export class ContactsController {
       const contact = await this.contactsService.getContactsById(
         String(id_contacts),
         request.user.user_id,
+        request.user.user_level,
       );
 
       if (contact.status == 200) {
         this.logger.log('Successfully retrieved data.');
         return {
           message: 'Succesfully Get Data',
-          statusCode: '200',
+          statusCode: contact.status,
           data: contact.data,
         };
       } else if (contact.status == 204) {
         this.logger.log('Data not found.');
         return {
           message: 'Succesfully But Get No Data',
-          statusCode: '500',
+          statusCode: contact.status,
           data: contact.data,
         };
       } else if (contact.status == 403) {
         this.logger.log('Error getting data. Permission denied.');
         return {
           message: 'Error Get Data, Permission Denied',
-          statusCode: '500',
+          statusCode: contact.status,
           data: contact.data,
         };
       } else if (contact.status == 500) {
         this.logger.log('Error getting data. Server error.');
         return {
           message: 'Error When Get Data',
-          statusCode: '500',
+          statusCode: contact.status,
           data: contact.data,
         };
       }
