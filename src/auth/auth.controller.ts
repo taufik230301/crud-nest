@@ -22,6 +22,7 @@ export class AuthController {
   async signIn(@Body() users: LoginUsersDto) {
     try {
       this.logger.log(`Received login request for username: ${users.username}`);
+      this.logger.log('deleteContact function called.');
       const result = await this.authService.signIn(
         users.username,
         users.password,
@@ -34,9 +35,19 @@ export class AuthController {
           statusCode: result.statusCode,
           access_token: result.access_token,
         };
+      } else if (result.statusCode == 401) {
+        return {
+          message: `Cannot login, password doesn't match`,
+          statusCode: result.statusCode,
+        };
+      } else if (result.statusCode == 404) {
+        return {
+          message: `Cannot login, user '${users.username}' not exists`,
+          statusCode: result.statusCode,
+        };
       } else {
         return {
-          message: result.message,
+          message: 'Error occurred.',
           statusCode: result.statusCode,
         };
       }
