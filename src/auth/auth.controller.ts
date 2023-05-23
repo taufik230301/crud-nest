@@ -59,6 +59,7 @@ export class AuthController {
       return {
         message: `Error occurred during login for username: ${users.username}`,
         statusCode: 500,
+        data: err,
       };
     }
   }

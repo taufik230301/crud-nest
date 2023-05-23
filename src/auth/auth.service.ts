@@ -28,7 +28,6 @@ export class AuthService {
           const token: string = await this.jwtService.signAsync(payload);
           this.logger.log('token created');
           return {
-            message: 'Success',
             statusCode: 200,
             access_token: token,
           };
@@ -47,8 +46,8 @@ export class AuthService {
     } catch (error) {
       this.logger.log(`Error occurred`);
       return {
-        message: `Error occurred.`,
         statusCode: 500,
+        data: error,
       };
     }
   }
