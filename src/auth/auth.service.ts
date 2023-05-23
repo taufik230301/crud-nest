@@ -35,15 +35,13 @@ export class AuthService {
         } else {
           this.logger.log('password not match');
           return {
-            message: `Cannot login, password doesn't match`,
-            statusCode: 500,
+            statusCode: 401,
           };
         }
       } else {
         this.logger.log(`user '${username}' not exists`);
         return {
-          message: `Cannot login, user '${username}' not exists`,
-          statusCode: 500,
+          statusCode: 404,
         };
       }
     } catch (error) {
