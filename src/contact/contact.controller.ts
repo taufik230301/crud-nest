@@ -17,6 +17,7 @@ import { ContactsService } from './contact.service';
 import { AuthGuard } from 'src/auth/auth.guard';
 import CreateContactsDto from './dto/createContacts.dto';
 import UpdateContactsDto from './dto/updateContacts.dto';
+import { ADMIN_USER_LEVEL } from './contact.constant';
 
 @Controller('contacts')
 export class ContactsController {
@@ -85,7 +86,7 @@ export class ContactsController {
       const { user_id } = request.user;
 
       this.logger.log('Checking if permisions is admin');
-      if (request.user.user_level == 0) {
+      if (request.user.user_level == ADMIN_USER_LEVEL) {
         this.logger.log('Checking if user_id is null');
         if (contacts.user_id) {
           this.contact_data = contacts;
