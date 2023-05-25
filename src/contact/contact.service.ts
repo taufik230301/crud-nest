@@ -3,6 +3,7 @@ import Contacts from './entity/contact.entity';
 import { DataSource, FindManyOptions } from 'typeorm';
 import CreateContactsDto from './dto/createContacts.dto';
 import UpdateContactsDto from './dto/updateContacts.dto';
+import { ADMIN_USER_LEVEL } from './contact.constant';
 
 @Injectable()
 export class ContactsService {
@@ -23,7 +24,7 @@ export class ContactsService {
     this.logger.log(
       'Checking if permisions is admin then give all access to contacts data',
     );
-    if (user_level == 0) {
+    if (user_level == ADMIN_USER_LEVEL) {
       this.where_options = {
         account_number: account_number,
         bank_name: bank_name,
@@ -120,7 +121,7 @@ export class ContactsService {
     this.logger.log(
       'Checking if permisions is admin then give all access to contacts data',
     );
-    if (user_level == 0) {
+    if (user_level == ADMIN_USER_LEVEL) {
       this.where_options = {
         id_contacts: id_contacts,
       };
@@ -146,7 +147,7 @@ export class ContactsService {
       this.logger.log('Checking If contacts found in the database.');
       if (contacts.length > 0) {
         this.logger.log('Checking If Permission is admin.');
-        if (user_level == 0) {
+        if (user_level == ADMIN_USER_LEVEL) {
           this.logger.log('Committing database transaction.');
           await queryRunner.commitTransaction();
           return { data: contacts, status: 200 };
@@ -203,7 +204,7 @@ export class ContactsService {
       this.logger.log('Checking If contacts found in the database.');
       if (currentContacts.length > 0) {
         this.logger.log('Checking If Permission is admin.');
-        if (user_level == 0) {
+        if (user_level == ADMIN_USER_LEVEL) {
           this.logger.log('Updating contacts in the database.');
           const updated_contact = await queryRunner.manager
             .createQueryBuilder()
@@ -288,7 +289,7 @@ export class ContactsService {
       this.logger.log('Checking if contacts found in the database.');
       if (deletedContacts.length > 0) {
         this.logger.log('Checking If Permission is admin.');
-        if (user_level == 0) {
+        if (user_level == ADMIN_USER_LEVEL) {
           this.logger.log('Deleting contact from the database.');
           const deleted = await queryRunner.manager
             .createQueryBuilder()
