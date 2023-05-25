@@ -55,6 +55,7 @@ export class ContactsService {
 
       this.logger.log('Query executed:');
       const contacts = await queryRunner.manager.find(Contacts, options);
+      this.logger.log('Checking If contacts found in the database.');
       if (contacts.length > 0) {
         this.logger.log('Committing database transaction.');
         await queryRunner.commitTransaction();
@@ -140,10 +141,12 @@ export class ContactsService {
       await queryRunner.connect();
       this.logger.log('Starting database transaction.');
       await queryRunner.startTransaction();
-      const contacts = await queryRunner.manager.find(Contacts, options);
       this.logger.log('Query executed');
+      const contacts = await queryRunner.manager.find(Contacts, options);
+      this.logger.log('Checking If contacts found in the database.');
       if (contacts.length > 0) {
-        if (user_id == 0) {
+        this.logger.log('Checking If Permission is admin.');
+        if (user_level == 0) {
           this.logger.log('Committing database transaction.');
           await queryRunner.commitTransaction();
           return { data: contacts, status: 200 };
@@ -208,7 +211,6 @@ export class ContactsService {
             .set(contacts)
             .where('id_contacts = :id', { id: id_contacts })
             .execute();
-
           if (updated_contact.affected) {
             this.logger.log('Committing database transaction.');
             await queryRunner.commitTransaction();
