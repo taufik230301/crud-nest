@@ -1,6 +1,8 @@
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { UserService } from '../user/users.service';
+import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
+import CreateUsersDto from 'src/user/dto/createUsers.dto';
 
 @Injectable()
 export class AuthService {
@@ -15,10 +17,11 @@ export class AuthService {
       const user = await this.userService.getUserByUsername(username);
       this.logger.log(`checking user '${username}' ...`);
 
-      if (user.status == 200) {
+      if (user.statusCode == 200) {
         this.logger.log(`user '${username}' exists`);
         this.logger.log('checking password....');
-        if (user.data.password == password) {
+        const res = await bcrypt.compare(password, user.data.password);
+        if (res) {
           this.logger.log('password match');
           const payload = {
             user_level: user.data.user_level,
@@ -48,6 +51,41 @@ export class AuthService {
       return {
         statusCode: 500,
         data: error,
+      };
+    }
+  }
+
+  async signUp(userData: CreateUsersDto) {
+    try {
+      this.logger.log(
+        `Starting password hashing for user '${userData.username}'...`,
+      );
+      const salt = await bcrypt.genSalt();
+      const hash = await bcrypt.hash(userData.password, salt);
+      userData.password = hash;
+      this.logger.log(
+        `Password hashing completed for user '${userData.username}'.`,
+      );
+
+      this.logger.log(`Creating user '${userData.username}'...`);
+      const user = await this.userService.createUser(userData);
+      this.logger.log(`User '${userData.username}' created successfully.`);
+
+      if (user.statusCode == 200) {
+        return {
+          statusCode: user.statusCode,
+        };
+      } else {
+        return {
+          data: user,
+          statusCode: user.statusCode,
+        };
+      }
+    } catch (error) {
+      this.logger.log('An error occurred during sign up:', error);
+      return {
+        data: error,
+        statusCode: 500,
       };
     }
   }
