@@ -67,9 +67,9 @@ export class ContactsController {
     } catch (err) {
       this.logger.log('An error occurred:', err);
       return {
-        message: 'Error Get Data',
+        message: err,
         statusCode: 500,
-        data: err,
+        data: 'null',
       };
     }
   }
@@ -127,9 +127,9 @@ export class ContactsController {
     } catch (err) {
       this.logger.log('An error occurred:', err);
       return {
-        message: 'Error Create Data',
+        message: err,
         statusCode: 500,
-        data: err,
+        data: 'null',
       };
     }
   }
@@ -191,9 +191,9 @@ export class ContactsController {
     } catch (err) {
       this.logger.log('An error occurred:', err);
       return {
-        message: 'Error Update Data',
+        message: err,
         statusCode: 500,
-        data: err,
+        data: 'null',
       };
     }
   }
@@ -250,9 +250,9 @@ export class ContactsController {
     } catch (err) {
       this.logger.log('An error occurred:', err);
       return {
-        message: 'Error When Delete Data',
-        statusCode: '500',
-        data: err,
+        message: err,
+        statusCode: 500,
+        data: 'null',
       };
     }
   }
@@ -303,9 +303,9 @@ export class ContactsController {
     } catch (err) {
       this.logger.log('An error occurred:', err);
       return {
-        message: 'Error When Get Data',
-        statusCode: '500',
-        data: err,
+        message: err,
+        statusCode: 500,
+        data: 'null',
       };
     }
   }

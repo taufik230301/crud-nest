@@ -17,7 +17,7 @@ export class AuthService {
       const user = await this.userService.getUserByUsername(username);
       this.logger.log(`checking user '${username}' ...`);
 
-      if (user.statusCode == 200) {
+      if (user.data) {
         this.logger.log(`user '${username}' exists`);
         this.logger.log('checking password....');
         const res = await bcrypt.compare(password, user.data.password);
@@ -38,19 +38,21 @@ export class AuthService {
           this.logger.log('password not match');
           return {
             statusCode: 401,
+            access_token: 'null',
           };
         }
       } else {
         this.logger.log(`user '${username}' not exists`);
         return {
           statusCode: 404,
+          access_token: 'null',
         };
       }
     } catch (error) {
       this.logger.log(`Error occurred`);
       return {
         statusCode: 500,
-        data: error,
+        access_token: 'null',
       };
     }
   }
@@ -71,13 +73,14 @@ export class AuthService {
       const user = await this.userService.createUser(userData);
       this.logger.log(`User '${userData.username}' created successfully.`);
 
-      if (user.statusCode == 200) {
+      if (user.data) {
         return {
+          data: user.data,
           statusCode: user.statusCode,
         };
       } else {
         return {
-          data: user,
+          data: user.data,
           statusCode: user.statusCode,
         };
       }

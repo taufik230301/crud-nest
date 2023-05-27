@@ -40,16 +40,19 @@ export class AuthController {
         return {
           message: `Cannot login, password doesn't match`,
           statusCode: result.statusCode,
+          access_token: result.access_token,
         };
       } else if (result.statusCode == 404) {
         return {
           message: `Cannot login, user '${users.username}' not exists`,
           statusCode: result.statusCode,
+          access_token: result.access_token,
         };
       } else {
         return {
           message: 'Error occurred.',
           statusCode: result.statusCode,
+          access_token: result.access_token,
         };
       }
     } catch (err) {
@@ -58,9 +61,9 @@ export class AuthController {
         err,
       );
       return {
-        message: `Error occurred during login for username: ${users.username}`,
+        message: err,
         statusCode: 500,
-        data: err,
+        access_token: 'null',
       };
     }
   }
@@ -78,6 +81,7 @@ export class AuthController {
         return {
           message: 'Register Successfully',
           statusCode: 200,
+          data: result.data,
         };
       } else {
         this.logger.log(`Failed to register user '${userData.username}'.`);
@@ -87,12 +91,12 @@ export class AuthController {
           data: result.data,
         };
       }
-    } catch (error) {
-      this.logger.log('An error occurred during user registration:', error);
+    } catch (err) {
+      this.logger.log('An error occurred during user registration:', err);
       return {
-        message: 'Register Error',
+        message: err,
         statusCode: 500,
-        data: error,
+        access_token: 'null',
       };
     }
   }
