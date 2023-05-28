@@ -1,6 +1,6 @@
 import { Repository } from 'typeorm';
 import Users from './entity/users.entity';
-import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import CreateUsersDto from './dto/createUsers.dto';
 
@@ -40,16 +40,13 @@ export class UserService {
   async createUser(userData: CreateUsersDto) {
     try {
       this.logger.log(`Run Query for insert user '${userData.username}' ...`);
-      const createdUser = await this.usersRepository
-        .createQueryBuilder()
-        .insert()
-        .into(Users)
-        .values(userData)
-        .execute();
-
+      const createdUser = await this.cerateUserInDatabase(userData);
+      this.logger.log(createdUser);
+      console.log(createdUser);
       if (createdUser) {
         this.logger.log(`User '${userData.username}' created successfully.`);
         return {
+          data: createdUser,
           statusCode: 200,
         };
       } else {
@@ -66,5 +63,16 @@ export class UserService {
         statusCode: 500,
       };
     }
+  }
+
+  async cerateUserInDatabase(userData: CreateUsersDto) {
+    const createdUser = await this.usersRepository
+      .createQueryBuilder()
+      .insert()
+      .into(Users)
+      .values(userData)
+      .execute();
+
+    return createdUser;
   }
 }

@@ -20,47 +20,27 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @Post('login')
   @UsePipes(new ValidationPipe({ transform: false }))
-  async signIn(@Body() users: LoginUsersDto) {
+  async signIn(@Body() userData: LoginUsersDto) {
     try {
-      this.logger.log(`Received login request for username: ${users.username}`);
+      this.logger.log(
+        `Received login request for username: ${userData.username}`,
+      );
       this.logger.log('signIn function called.');
       const result = await this.authService.signIn(
-        users.username,
-        users.password,
+        userData.username,
+        userData.password,
       );
 
-      if (result.statusCode == 200) {
-        this.logger.log(`User '${users.username}' successfully logged in`);
-        return {
-          message: `Success Login`,
-          statusCode: result.statusCode,
-          access_token: result.access_token,
-        };
-      } else if (result.statusCode == 401) {
-        return {
-          message: `Cannot login, password doesn't match`,
-          statusCode: result.statusCode,
-        };
-      } else if (result.statusCode == 404) {
-        return {
-          message: `Cannot login, user '${users.username}' not exists`,
-          statusCode: result.statusCode,
-        };
-      } else {
-        return {
-          message: 'Error occurred.',
-          statusCode: result.statusCode,
-        };
-      }
+      return this.handleAuthenticationResult(result, userData.username);
     } catch (err) {
       this.logger.error(
-        `Error occurred during login for username: ${users.username}`,
+        `Error occurred during login for username: ${userData.username}`,
         err,
       );
       return {
-        message: `Error occurred during login for username: ${users.username}`,
+        message: err,
         statusCode: 500,
-        data: err,
+        access_token: 'null',
       };
     }
   }
@@ -73,27 +53,58 @@ export class AuthController {
       this.logger.log(`Registering user '${userData.username}'...`);
       const result = await this.authService.signUp(userData);
 
-      if (result.statusCode == 200) {
-        this.logger.log(`User '${userData.username}' registered successfully.`);
-        return {
-          message: 'Register Successfully',
-          statusCode: 200,
-        };
-      } else {
-        this.logger.log(`Failed to register user '${userData.username}'.`);
-        return {
-          message: 'Register Error',
-          statusCode: result.statusCode,
-          data: result.data,
-        };
-      }
-    } catch (error) {
-      this.logger.log('An error occurred during user registration:', error);
+      return this.handleRegistrationResult(result, userData.username);
+    } catch (err) {
+      this.logger.log('An error occurred during user registration:', err);
       return {
-        message: 'Register Error',
+        message: err,
         statusCode: 500,
-        data: error,
+        access_token: 'null',
       };
     }
+  }
+
+  private handleAuthenticationResult(result: any, username: string) {
+    const response = {
+      message: '',
+      statusCode: result.statusCode,
+      access_token: result.access_token,
+    };
+
+    switch (result.statusCode) {
+      case 200:
+        this.logger.log(`User '${username}' successfully logged in`);
+        response.message = 'Success Login';
+        break;
+      case 401:
+        response.message = `Cannot login, password doesn't match`;
+        break;
+      case 404:
+        response.message = `Cannot login, user '${username}' not exists`;
+        break;
+      default:
+        response.message = 'Error occurred.';
+        break;
+    }
+
+    return response;
+  }
+
+  private handleRegistrationResult(result: any, username: string) {
+    const response = {
+      message: '',
+      statusCode: result.statusCode,
+      data: result.data,
+    };
+
+    if (result.statusCode === 200) {
+      this.logger.log(`User '${username}' registered successfully.`);
+      response.message = 'Register Successfully';
+    } else {
+      this.logger.log(`Failed to register user '${username}'.`);
+      response.message = 'Register Error';
+    }
+
+    return response;
   }
 }

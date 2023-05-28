@@ -4,6 +4,13 @@ import { DataSource, FindManyOptions } from 'typeorm';
 import CreateContactsDto from './dto/createContacts.dto';
 import UpdateContactsDto from './dto/updateContacts.dto';
 import { ADMIN_USER_LEVEL } from './contact.constant';
+import {
+  createContactInDatabase,
+  createWhereOptions,
+  deleteContactInDatabase,
+  readContactInDatabase,
+  updateContactInDatabase,
+} from './utils/contact.utils';
 
 @Injectable()
 export class ContactsService {
@@ -24,21 +31,13 @@ export class ContactsService {
     this.logger.log(
       'Checking if permisions is admin then give all access to contacts data',
     );
-    if (user_level == ADMIN_USER_LEVEL) {
-      this.where_options = {
-        account_number: account_number,
-        bank_name: bank_name,
-        contacts_name: contacts_name,
-      };
-    } else {
-      this.where_options = {
-        user_id: user_id,
-        account_number: account_number,
-        bank_name: bank_name,
-        contacts_name: contacts_name,
-      };
-    }
-
+    this.where_options = await createWhereOptions(
+      user_level,
+      user_id,
+      account_number,
+      bank_name,
+      contacts_name,
+    );
     this.logger.log('Creating options object');
     const options: FindManyOptions<Contacts> = {
       where: this.where_options,
@@ -55,7 +54,7 @@ export class ContactsService {
       await queryRunner.startTransaction();
 
       this.logger.log('Query executed:');
-      const contacts = await queryRunner.manager.find(Contacts, options);
+      const contacts = await readContactInDatabase(queryRunner, options);
       this.logger.log('Checking If contacts found in the database.');
       if (contacts.length > 0) {
         this.logger.log('Committing database transaction.');
@@ -85,12 +84,7 @@ export class ContactsService {
       await queryRunner.connect();
       this.logger.log('Starting database transaction.');
       await queryRunner.startTransaction();
-      const newContacts = await queryRunner.manager
-        .createQueryBuilder()
-        .insert()
-        .into(Contacts)
-        .values(contacts)
-        .execute();
+      const newContacts = await createContactInDatabase(queryRunner, contacts);
       this.logger.log('Query executed');
       if (newContacts) {
         this.logger.log('Committing database transaction.');
@@ -143,7 +137,7 @@ export class ContactsService {
       this.logger.log('Starting database transaction.');
       await queryRunner.startTransaction();
       this.logger.log('Query executed');
-      const contacts = await queryRunner.manager.find(Contacts, options);
+      const contacts = await readContactInDatabase(queryRunner, options);
       this.logger.log('Checking If contacts found in the database.');
       if (contacts.length > 0) {
         this.logger.log('Checking If Permission is admin.');
@@ -207,7 +201,7 @@ export class ContactsService {
         this.logger.log('Checking If Permission is admin.');
         if (user_level == ADMIN_USER_LEVEL) {
           this.logger.log('Updating contacts in the database.');
-          const updated_contact = await this.updateContactInDatabase(
+          const updated_contact = await updateContactInDatabase(
             queryRunner,
             contacts,
             id_contacts,
@@ -226,7 +220,7 @@ export class ContactsService {
           this.logger.log('Checking If Updated Contacts Belongs to user.');
           if (currentContacts[0].user_id == user_id) {
             this.logger.log('Updating contacts in the database.');
-            const updated_contact = await this.updateContactInDatabase(
+            const updated_contact = await updateContactInDatabase(
               queryRunner,
               contacts,
               id_contacts,
@@ -265,21 +259,6 @@ export class ContactsService {
     }
   }
 
-  async updateContactInDatabase(
-    queryRunner,
-    contacts: UpdateContactsDto,
-    id_contacts: string,
-  ) {
-    const updated_contact = await queryRunner.manager
-      .createQueryBuilder()
-      .update(Contacts)
-      .set(contacts)
-      .where('id_contacts = :id', { id: id_contacts })
-      .execute();
-
-    return updated_contact;
-  }
-
   async deleteContact(
     id_contacts: string,
     user_id: number,
@@ -307,7 +286,7 @@ export class ContactsService {
         this.logger.log('Checking If Permission is admin.');
         if (user_level == ADMIN_USER_LEVEL) {
           this.logger.log('Deleting contact from the database.');
-          const deleted = await this.deleteContactInDatabase(
+          const deleted = await deleteContactInDatabase(
             queryRunner,
             id_contacts,
           );
@@ -325,7 +304,7 @@ export class ContactsService {
           this.logger.log('Checking If Deleted Contacts Belongs to user.');
           if (deletedContacts[0].user_id == user_id) {
             this.logger.log('Deleting contact from the database.');
-            const deleted = await this.deleteContactInDatabase(
+            const deleted = await deleteContactInDatabase(
               queryRunner,
               id_contacts,
             );
@@ -361,16 +340,5 @@ export class ContactsService {
       this.logger.log('Releasing database query runner.');
       await queryRunner.release(); // Release the queryRunner after using it
     }
-  }
-
-  async deleteContactInDatabase(queryRunner, id_contacts: string) {
-    const deleted = await queryRunner.manager
-      .createQueryBuilder()
-      .delete()
-      .from(Contacts)
-      .where('id_contacts = :id', { id: id_contacts })
-      .execute();
-
-    return deleted;
   }
 }
