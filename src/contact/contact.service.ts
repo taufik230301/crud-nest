@@ -3,14 +3,7 @@ import Contacts from './entity/contact.entity';
 import { DataSource, FindManyOptions } from 'typeorm';
 import CreateContactsDto from './dto/createContacts.dto';
 import UpdateContactsDto from './dto/updateContacts.dto';
-import { ADMIN_USER_LEVEL } from '../auth/auth.constant';
-import {
-  createContactInDatabase,
-  createWhereOptions,
-  deleteContactInDatabase,
-  readContactInDatabase,
-  updateContactInDatabase,
-} from './utils/contact.utils';
+import { ContactUtils } from './utils/contact.utils';
 
 @Injectable()
 export class ContactsService {
@@ -21,7 +14,6 @@ export class ContactsService {
 
   async getAllContacts(
     user_id: number,
-    user_level: number,
     account_number: string,
     bank_name: string,
     contacts_name: string,
@@ -31,16 +23,15 @@ export class ContactsService {
     this.logger.log(
       'Checking if permisions is admin then give all access to contacts data',
     );
-    this.where_options = await createWhereOptions(
-      user_level,
-      user_id,
-      account_number,
-      bank_name,
-      contacts_name,
-    );
+
     this.logger.log('Creating options object');
     const options: FindManyOptions<Contacts> = {
-      where: this.where_options,
+      where: {
+        user_id: user_id,
+        account_number: account_number,
+        bank_name: bank_name,
+        contacts_name: contacts_name,
+      },
     };
 
     this.logger.log('Creating queryRunner.');
@@ -54,7 +45,10 @@ export class ContactsService {
       await queryRunner.startTransaction();
 
       this.logger.log('Query executed:');
-      const contacts = await readContactInDatabase(queryRunner, options);
+      const contacts = await ContactUtils.readContactInDatabase(
+        queryRunner,
+        options,
+      );
       this.logger.log('Checking If contacts found in the database.');
       if (contacts.length > 0) {
         this.logger.log('Committing database transaction.');
@@ -63,7 +57,7 @@ export class ContactsService {
       } else {
         this.logger.log('Rolling back database transaction.');
         await queryRunner.rollbackTransaction();
-        return { data: contacts, statusCode: 204 };
+        return { data: contacts, statusCode: 404 };
       }
     } catch (err) {
       this.logger.log('Error occurred. Rolling back database transaction.');
@@ -84,7 +78,10 @@ export class ContactsService {
       await queryRunner.connect();
       this.logger.log('Starting database transaction.');
       await queryRunner.startTransaction();
-      const newContacts = await createContactInDatabase(queryRunner, contacts);
+      const newContacts = await ContactUtils.createContactInDatabase(
+        queryRunner,
+        contacts,
+      );
       this.logger.log('Query executed');
       if (newContacts) {
         this.logger.log('Committing database transaction.');
@@ -93,7 +90,7 @@ export class ContactsService {
       } else {
         this.logger.log('Rolling back database transaction.');
         await queryRunner.rollbackTransaction();
-        return { data: contacts, statusCode: 500 };
+        return { data: contacts, statusCode: 404 };
       }
     } catch (err) {
       this.logger.log('Error occurred. Rolling back database transaction.');
@@ -105,26 +102,13 @@ export class ContactsService {
     }
   }
 
-  async getContactsById(
-    id_contacts: string,
-    user_id: number,
-    user_level: number,
-  ) {
+  async getContactsById(id_contacts: string, user_id: number) {
     this.logger.log('getContactsById function called.');
 
-    this.logger.log(
-      'Checking if permisions is admin then give all access to contacts data',
-    );
-    if (user_level == ADMIN_USER_LEVEL) {
-      this.where_options = {
-        id_contacts: id_contacts,
-      };
-    } else {
-      this.where_options = {
-        id_contacts: id_contacts,
-        user_id: user_id,
-      };
-    }
+    this.where_options = {
+      id_contacts: id_contacts,
+      user_id: user_id,
+    };
     this.logger.log('Creating options object');
     const options: FindManyOptions<Contacts> = {
       where: this.where_options,
@@ -137,30 +121,18 @@ export class ContactsService {
       this.logger.log('Starting database transaction.');
       await queryRunner.startTransaction();
       this.logger.log('Query executed');
-      const contacts = await readContactInDatabase(queryRunner, options);
+      const contacts = await ContactUtils.readContactInDatabase(
+        queryRunner,
+        options,
+      );
       this.logger.log('Checking If contacts found in the database.');
       if (contacts.length > 0) {
-        this.logger.log('Checking If Permission is admin.');
-        if (user_level == ADMIN_USER_LEVEL) {
-          this.logger.log('Committing database transaction.');
-          await queryRunner.commitTransaction();
-          return { data: contacts, statusCode: 200 };
-        } else {
-          this.logger.log('Checking If Contacts Belongs to user.');
-          if (contacts[0].user_id == user_id) {
-            this.logger.log('Committing database transaction.');
-            await queryRunner.commitTransaction();
-            return { data: contacts, statusCode: 200 };
-          } else {
-            this.logger.log('Rolling back database transaction.');
-            await queryRunner.rollbackTransaction();
-            return { data: contacts, statusCode: 403 };
-          }
-        }
+        await queryRunner.commitTransaction();
+        return { data: contacts, statusCode: 200 };
       } else {
         this.logger.log('Rolling back database transaction.');
         await queryRunner.rollbackTransaction();
-        return { data: contacts, statusCode: 204 };
+        return { data: contacts, statusCode: 404 };
       }
     } catch (err) {
       this.logger.log(
@@ -185,7 +157,7 @@ export class ContactsService {
       await queryRunner.connect();
       this.logger.log('Starting database transaction.');
       await queryRunner.startTransaction();
-      const updated_contact = await updateContactInDatabase(
+      const updated_contact = await ContactUtils.updateContactInDatabase(
         queryRunner,
         contacts,
         id_contacts,
@@ -232,7 +204,10 @@ export class ContactsService {
       const deletedContacts = await queryRunner.manager.find(Contacts, options);
 
       this.logger.log('Checking if contacts found in the database.');
-      const deleted = await deleteContactInDatabase(queryRunner, id_contacts);
+      const deleted = await ContactUtils.deleteContactInDatabase(
+        queryRunner,
+        id_contacts,
+      );
       this.logger.log('Checking if any affected records were deleted');
       if (deleted.affected) {
         this.logger.log('Committing database transaction.');

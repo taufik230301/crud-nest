@@ -1,33 +1,52 @@
-import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
+import {
+  CanActivate,
+  ExecutionContext,
+  Injectable,
+  Logger,
+} from '@nestjs/common';
 import { ContactsService } from '../contact/contact.service';
 import { ADMIN_USER_LEVEL } from '../auth/auth.constant';
 
 @Injectable()
 export class AdminGuard implements CanActivate {
+  private readonly logger = new Logger(AdminGuard.name);
   constructor(private readonly contactsService: ContactsService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
-    const { user_level, user_id } = request.user;
+    const { user_level, user_id, ...resRequest } = request.user;
 
-    if (user_level === ADMIN_USER_LEVEL) {
-      request.user_level = ADMIN_USER_LEVEL;
-      request.user_id = '';
-      return true; // Admin user has permission, allow access
+    this.logger.debug('Checking admin permissions');
+    if (user_level == ADMIN_USER_LEVEL) {
+      this.logger.debug('Admin user detected. Granting access.');
+
+      if (request.body.user_id === undefined && request.route.methods.post) {
+        this.logger.debug('Admin user_id is null. Access denied.');
+        return false;
+      }
+      request['user'] = resRequest;
+      return true;
+    } else {
+      if (!request.route.methods.get) {
+        request.body.user_id = user_id;
+      }
+
+      this.logger.debug(
+        'Regular user detected. Access granted for non-edit request.',
+      );
+
+      const contactId = request.params.id_contacts;
+      const contact = await this.contactsService.getContactsById(
+        contactId,
+        user_id,
+      );
+      if (contact.data.length == 0) {
+        this.logger.debug('Contact not found. Access denied.');
+        return false;
+      } else {
+        this.logger.debug('Contact permission granted.');
+        return true;
+      }
     }
-
-    // Regular user, check if they have permission to edit the contact
-    const contactId = request.params.id_contacts; // Assuming the contact ID is passed as a route parameter
-    const contact = await this.contactsService.getContactsById(
-      contactId,
-      user_id,
-      user_level,
-    );
-
-    if (contact.data.length == 0) {
-      return false; // Contact does not exist, deny access
-    }
-
-    return true; // Regular user does not have permission, deny access
   }
 }
