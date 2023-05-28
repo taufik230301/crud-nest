@@ -3,14 +3,7 @@ import Contacts from './entity/contact.entity';
 import { DataSource, FindManyOptions } from 'typeorm';
 import CreateContactsDto from './dto/createContacts.dto';
 import UpdateContactsDto from './dto/updateContacts.dto';
-import { ADMIN_USER_LEVEL } from '../auth/auth.constant';
-import {
-  createContactInDatabase,
-  createWhereOptions,
-  deleteContactInDatabase,
-  readContactInDatabase,
-  updateContactInDatabase,
-} from './utils/contact.utils';
+import { ContactUtils } from './utils/contact.utils';
 
 @Injectable()
 export class ContactsService {
@@ -52,7 +45,10 @@ export class ContactsService {
       await queryRunner.startTransaction();
 
       this.logger.log('Query executed:');
-      const contacts = await readContactInDatabase(queryRunner, options);
+      const contacts = await ContactUtils.readContactInDatabase(
+        queryRunner,
+        options,
+      );
       this.logger.log('Checking If contacts found in the database.');
       if (contacts.length > 0) {
         this.logger.log('Committing database transaction.');
@@ -61,7 +57,7 @@ export class ContactsService {
       } else {
         this.logger.log('Rolling back database transaction.');
         await queryRunner.rollbackTransaction();
-        return { data: contacts, statusCode: 204 };
+        return { data: contacts, statusCode: 404 };
       }
     } catch (err) {
       this.logger.log('Error occurred. Rolling back database transaction.');
@@ -82,7 +78,10 @@ export class ContactsService {
       await queryRunner.connect();
       this.logger.log('Starting database transaction.');
       await queryRunner.startTransaction();
-      const newContacts = await createContactInDatabase(queryRunner, contacts);
+      const newContacts = await ContactUtils.createContactInDatabase(
+        queryRunner,
+        contacts,
+      );
       this.logger.log('Query executed');
       if (newContacts) {
         this.logger.log('Committing database transaction.');
@@ -91,7 +90,7 @@ export class ContactsService {
       } else {
         this.logger.log('Rolling back database transaction.');
         await queryRunner.rollbackTransaction();
-        return { data: contacts, statusCode: 500 };
+        return { data: contacts, statusCode: 404 };
       }
     } catch (err) {
       this.logger.log('Error occurred. Rolling back database transaction.');
@@ -122,7 +121,10 @@ export class ContactsService {
       this.logger.log('Starting database transaction.');
       await queryRunner.startTransaction();
       this.logger.log('Query executed');
-      const contacts = await readContactInDatabase(queryRunner, options);
+      const contacts = await ContactUtils.readContactInDatabase(
+        queryRunner,
+        options,
+      );
       this.logger.log('Checking If contacts found in the database.');
       if (contacts.length > 0) {
         await queryRunner.commitTransaction();
@@ -130,7 +132,7 @@ export class ContactsService {
       } else {
         this.logger.log('Rolling back database transaction.');
         await queryRunner.rollbackTransaction();
-        return { data: contacts, statusCode: 204 };
+        return { data: contacts, statusCode: 404 };
       }
     } catch (err) {
       this.logger.log(
@@ -155,7 +157,7 @@ export class ContactsService {
       await queryRunner.connect();
       this.logger.log('Starting database transaction.');
       await queryRunner.startTransaction();
-      const updated_contact = await updateContactInDatabase(
+      const updated_contact = await ContactUtils.updateContactInDatabase(
         queryRunner,
         contacts,
         id_contacts,
@@ -202,7 +204,10 @@ export class ContactsService {
       const deletedContacts = await queryRunner.manager.find(Contacts, options);
 
       this.logger.log('Checking if contacts found in the database.');
-      const deleted = await deleteContactInDatabase(queryRunner, id_contacts);
+      const deleted = await ContactUtils.deleteContactInDatabase(
+        queryRunner,
+        id_contacts,
+      );
       this.logger.log('Checking if any affected records were deleted');
       if (deleted.affected) {
         this.logger.log('Committing database transaction.');

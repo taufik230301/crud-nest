@@ -3,102 +3,122 @@ import CreateContactsDto from '../dto/createContacts.dto';
 import UpdateContactsDto from '../dto/updateContacts.dto';
 import Contacts from '../entity/contact.entity';
 import { ADMIN_USER_LEVEL } from '../../auth/auth.constant';
+import { Logger } from '@nestjs/common';
 
-export async function createContactInDatabase(
-  queryRunner: QueryRunner,
-  contacts: CreateContactsDto,
-) {
-  const newContacts = await queryRunner.manager
-    .createQueryBuilder()
-    .insert()
-    .into(Contacts)
-    .values(contacts)
-    .execute();
+export class ContactUtils {
+  private static readonly logger = new Logger(ContactUtils.name);
 
-  return newContacts;
-}
+  public static async createContactInDatabase(
+    queryRunner: QueryRunner,
+    contacts: CreateContactsDto,
+  ) {
+    const newContacts = await queryRunner.manager
+      .createQueryBuilder()
+      .insert()
+      .into(Contacts)
+      .values(contacts)
+      .execute();
 
-export async function readContactInDatabase(
-  queryRunner: QueryRunner,
-  options: FindManyOptions<Contacts>,
-) {
-  const newContacts = await queryRunner.manager.find(Contacts, options);
+    return newContacts;
+  }
 
-  return newContacts;
-}
+  public static async readContactInDatabase(
+    queryRunner: QueryRunner,
+    options: FindManyOptions<Contacts>,
+  ) {
+    const newContacts = await queryRunner.manager.find(Contacts, options);
 
-export async function deleteContactInDatabase(
-  queryRunner: QueryRunner,
-  id_contacts: string,
-) {
-  const deleted = await queryRunner.manager
-    .createQueryBuilder()
-    .delete()
-    .from(Contacts)
-    .where('id_contacts = :id', { id: id_contacts })
-    .execute();
+    return newContacts;
+  }
 
-  return deleted;
-}
+  public static async deleteContactInDatabase(
+    queryRunner: QueryRunner,
+    id_contacts: string,
+  ) {
+    const deleted = await queryRunner.manager
+      .createQueryBuilder()
+      .delete()
+      .from(Contacts)
+      .where('id_contacts = :id', { id: id_contacts })
+      .execute();
 
-export async function updateContactInDatabase(
-  queryRunner: QueryRunner,
-  contacts: UpdateContactsDto,
-  id_contacts: string,
-) {
-  const updated_contact = await queryRunner.manager
-    .createQueryBuilder()
-    .update(Contacts)
-    .set(contacts)
-    .where('id_contacts = :id', { id: id_contacts })
-    .execute();
+    return deleted;
+  }
 
-  return updated_contact;
-}
+  public static async updateContactInDatabase(
+    queryRunner: QueryRunner,
+    contacts: UpdateContactsDto,
+    id_contacts: string,
+  ) {
+    const updated_contact = await queryRunner.manager
+      .createQueryBuilder()
+      .update(Contacts)
+      .set(contacts)
+      .where('id_contacts = :id', { id: id_contacts })
+      .execute();
 
-export async function SuccessResponse(
-  message: string,
-  statusCode: number,
-  data: any,
-) {
-  return {
-    message: message,
-    statusCode: statusCode,
-    data: data,
-  };
-}
+    return updated_contact;
+  }
 
-export async function ErrorResponse(
-  message: string,
-  statusCode: number,
-  data: any,
-) {
-  return {
-    message: message,
-    statusCode: statusCode,
-    data: data,
-  };
-}
-
-export async function createWhereOptions(
-  user_level: number,
-  user_id: number,
-  account_number: string,
-  bank_name: string,
-  contacts_name: string,
-) {
-  if (user_level == ADMIN_USER_LEVEL) {
+  public static async SuccessResponse(
+    message: string,
+    statusCode: number,
+    data: any,
+  ) {
     return {
-      account_number: account_number,
-      bank_name: bank_name,
-      contacts_name: contacts_name,
+      message: message,
+      statusCode: statusCode,
+      data: data,
     };
-  } else {
+  }
+
+  public static async ErrorResponse(
+    message: string,
+    statusCode: number,
+    data: any,
+  ) {
     return {
-      user_id: user_id,
-      account_number: account_number,
-      bank_name: bank_name,
-      contacts_name: contacts_name,
+      message: message,
+      statusCode: statusCode,
+      data: data,
     };
+  }
+
+  public static async handleContactResponse(
+    statusCode: number,
+    successMessage: string,
+    errorMessage: string,
+    data: any,
+  ) {
+    const response =
+      statusCode === 200
+        ? this.SuccessResponse(successMessage, statusCode, data)
+        : this.ErrorResponse(errorMessage, statusCode, data);
+
+    this.logger.log(response);
+    return response;
+  }
+
+  public static async createWhereOptions(
+    user_level: number,
+    user_id: number,
+    account_number: string,
+    bank_name: string,
+    contacts_name: string,
+  ) {
+    if (user_level == ADMIN_USER_LEVEL) {
+      return {
+        account_number: account_number,
+        bank_name: bank_name,
+        contacts_name: contacts_name,
+      };
+    } else {
+      return {
+        user_id: user_id,
+        account_number: account_number,
+        bank_name: bank_name,
+        contacts_name: contacts_name,
+      };
+    }
   }
 }
