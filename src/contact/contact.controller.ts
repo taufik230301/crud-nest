@@ -26,7 +26,7 @@ export class ContactsController {
   constructor(private readonly contactsService: ContactsService) {}
   private readonly logger = new Logger(ContactsController.name);
   contact_data: any;
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, AdminGuard)
   @Get()
   async getContacts(
     @Req() request: any,
@@ -38,7 +38,6 @@ export class ContactsController {
       this.logger.log('getContacts function called.');
       const contact = await this.contactsService.getAllContacts(
         request.user.user_id,
-        request.user.user_level,
         account_number,
         bank_name,
         contacts_name,
@@ -220,7 +219,7 @@ export class ContactsController {
     }
   }
 
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, AdminGuard)
   @Get(':id_contacts')
   async getContactById(
     @Param('id_contacts') id_contacts: string,
@@ -231,7 +230,6 @@ export class ContactsController {
       const contact = await this.contactsService.getContactsById(
         String(id_contacts),
         request.user.user_id,
-        request.user.user_level,
       );
 
       if (contact.statusCode == 200) {

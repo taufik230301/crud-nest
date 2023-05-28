@@ -21,7 +21,6 @@ export class ContactsService {
 
   async getAllContacts(
     user_id: number,
-    user_level: number,
     account_number: string,
     bank_name: string,
     contacts_name: string,
@@ -31,16 +30,15 @@ export class ContactsService {
     this.logger.log(
       'Checking if permisions is admin then give all access to contacts data',
     );
-    this.where_options = await createWhereOptions(
-      user_level,
-      user_id,
-      account_number,
-      bank_name,
-      contacts_name,
-    );
+
     this.logger.log('Creating options object');
     const options: FindManyOptions<Contacts> = {
-      where: this.where_options,
+      where: {
+        user_id: user_id,
+        account_number: account_number,
+        bank_name: bank_name,
+        contacts_name: contacts_name,
+      },
     };
 
     this.logger.log('Creating queryRunner.');
@@ -105,26 +103,13 @@ export class ContactsService {
     }
   }
 
-  async getContactsById(
-    id_contacts: string,
-    user_id: number,
-    user_level: number,
-  ) {
+  async getContactsById(id_contacts: string, user_id: number) {
     this.logger.log('getContactsById function called.');
 
-    this.logger.log(
-      'Checking if permisions is admin then give all access to contacts data',
-    );
-    if (user_level == ADMIN_USER_LEVEL) {
-      this.where_options = {
-        id_contacts: id_contacts,
-      };
-    } else {
-      this.where_options = {
-        id_contacts: id_contacts,
-        user_id: user_id,
-      };
-    }
+    this.where_options = {
+      id_contacts: id_contacts,
+      user_id: user_id,
+    };
     this.logger.log('Creating options object');
     const options: FindManyOptions<Contacts> = {
       where: this.where_options,
@@ -140,23 +125,8 @@ export class ContactsService {
       const contacts = await readContactInDatabase(queryRunner, options);
       this.logger.log('Checking If contacts found in the database.');
       if (contacts.length > 0) {
-        this.logger.log('Checking If Permission is admin.');
-        if (user_level == ADMIN_USER_LEVEL) {
-          this.logger.log('Committing database transaction.');
-          await queryRunner.commitTransaction();
-          return { data: contacts, statusCode: 200 };
-        } else {
-          this.logger.log('Checking If Contacts Belongs to user.');
-          if (contacts[0].user_id == user_id) {
-            this.logger.log('Committing database transaction.');
-            await queryRunner.commitTransaction();
-            return { data: contacts, statusCode: 200 };
-          } else {
-            this.logger.log('Rolling back database transaction.');
-            await queryRunner.rollbackTransaction();
-            return { data: contacts, statusCode: 403 };
-          }
-        }
+        await queryRunner.commitTransaction();
+        return { data: contacts, statusCode: 200 };
       } else {
         this.logger.log('Rolling back database transaction.');
         await queryRunner.rollbackTransaction();
