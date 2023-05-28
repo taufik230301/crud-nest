@@ -2,6 +2,7 @@ import { FindManyOptions, QueryRunner } from 'typeorm';
 import CreateContactsDto from '../dto/createContacts.dto';
 import UpdateContactsDto from '../dto/updateContacts.dto';
 import Contacts from '../entity/contact.entity';
+import { ADMIN_USER_LEVEL } from '../contact.constant';
 
 export async function createContactInDatabase(
   queryRunner: QueryRunner,
@@ -53,4 +54,51 @@ export async function updateContactInDatabase(
     .execute();
 
   return updated_contact;
+}
+
+export async function SuccessResponse(
+  message: string,
+  statusCode: number,
+  data: any,
+) {
+  return {
+    message: message,
+    statusCode: statusCode,
+    data: data,
+  };
+}
+
+export async function ErrorResponse(
+  message: string,
+  statusCode: number,
+  data: any,
+) {
+  return {
+    message: message,
+    statusCode: statusCode,
+    data: data,
+  };
+}
+
+export async function createWhereOptions(
+  user_level: number,
+  user_id: number,
+  account_number: string,
+  bank_name: string,
+  contacts_name: string,
+) {
+  if (user_level == ADMIN_USER_LEVEL) {
+    return {
+      account_number: account_number,
+      bank_name: bank_name,
+      contacts_name: contacts_name,
+    };
+  } else {
+    return {
+      user_id: user_id,
+      account_number: account_number,
+      bank_name: bank_name,
+      contacts_name: contacts_name,
+    };
+  }
 }

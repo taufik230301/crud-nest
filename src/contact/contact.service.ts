@@ -6,6 +6,7 @@ import UpdateContactsDto from './dto/updateContacts.dto';
 import { ADMIN_USER_LEVEL } from './contact.constant';
 import {
   createContactInDatabase,
+  createWhereOptions,
   deleteContactInDatabase,
   readContactInDatabase,
   updateContactInDatabase,
@@ -30,21 +31,13 @@ export class ContactsService {
     this.logger.log(
       'Checking if permisions is admin then give all access to contacts data',
     );
-    if (user_level == ADMIN_USER_LEVEL) {
-      this.where_options = {
-        account_number: account_number,
-        bank_name: bank_name,
-        contacts_name: contacts_name,
-      };
-    } else {
-      this.where_options = {
-        user_id: user_id,
-        account_number: account_number,
-        bank_name: bank_name,
-        contacts_name: contacts_name,
-      };
-    }
-
+    this.where_options = await createWhereOptions(
+      user_level,
+      user_id,
+      account_number,
+      bank_name,
+      contacts_name,
+    );
     this.logger.log('Creating options object');
     const options: FindManyOptions<Contacts> = {
       where: this.where_options,

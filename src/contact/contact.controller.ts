@@ -18,6 +18,7 @@ import { AuthGuard } from 'src/auth/auth.guard';
 import CreateContactsDto from './dto/createContacts.dto';
 import UpdateContactsDto from './dto/updateContacts.dto';
 import { ADMIN_USER_LEVEL } from './contact.constant';
+import { ErrorResponse, SuccessResponse } from './utils/contact.utils';
 
 @Controller('contacts')
 export class ContactsController {
@@ -44,33 +45,29 @@ export class ContactsController {
 
       if (contact.statusCode == 200) {
         this.logger.log('Successfully retrieved data.');
-        return {
-          message: 'Succesfully Get Data',
-          statusCode: contact.statusCode,
-          data: contact.data,
-        };
+        return SuccessResponse(
+          'Succesfully Get Data',
+          contact.statusCode,
+          contact.data,
+        );
       } else if (contact.statusCode == 204) {
         this.logger.log('Successfully retrieved data but no data found.');
-        return {
-          message: 'Succesfully But Get No Data',
-          statusCode: contact.statusCode,
-          data: contact.data,
-        };
+        return SuccessResponse(
+          'Succesfully But Get No Data',
+          contact.statusCode,
+          contact.data,
+        );
       } else if (contact.statusCode == 500) {
         this.logger.log('Error retrieving data.');
-        return {
-          message: 'Error Get Data',
-          statusCode: contact.statusCode,
-          data: contact.data,
-        };
+        return ErrorResponse(
+          'Error Get Data',
+          contact.statusCode,
+          contact.data,
+        );
       }
     } catch (err) {
       this.logger.log('An error occurred:', err);
-      return {
-        message: err,
-        statusCode: 500,
-        data: 'null',
-      };
+      return ErrorResponse(err, 500, 'null');
     }
   }
 
@@ -93,11 +90,11 @@ export class ContactsController {
           this.logger.log('Creating contact:', this.contact_data);
         } else {
           this.logger.log('An error occurred: user_id cannot be null');
-          return {
-            message: 'Error Create Data, user_id cannot be null',
-            statusCode: 500,
-            data: [],
-          };
+          return ErrorResponse(
+            'Error Create Data, user_id cannot be null',
+            400,
+            'null',
+          );
         }
       } else {
         this.contact_data = { ...contacts, user_id };
@@ -111,26 +108,22 @@ export class ContactsController {
 
       if (contact.statusCode == 200) {
         this.logger.log('Successfully created data.');
-        return {
-          message: 'Succesfully Create Data',
-          statusCode: contact.statusCode,
-          data: contact.data,
-        };
+        return SuccessResponse(
+          'Succesfully Create Data',
+          contact.statusCode,
+          contact.data,
+        );
       } else {
         this.logger.log('Successfully created data.');
-        return {
-          message: 'Error Create Data',
-          statusCode: contact.statusCode,
-          data: contact.data,
-        };
+        return ErrorResponse(
+          'Error Create Data',
+          contact.statusCode,
+          contact.data,
+        );
       }
     } catch (err) {
       this.logger.log('An error occurred:', err);
-      return {
-        message: err,
-        statusCode: 500,
-        data: 'null',
-      };
+      return ErrorResponse(err, 500, 'null');
     }
   }
 
@@ -154,47 +147,43 @@ export class ContactsController {
 
       if (contact.statusCode == 200) {
         this.logger.log('Successfully updated data.');
-        return {
-          message: 'Succesfully Update Data',
-          statusCode: contact.statusCode,
-          data: contact.data,
-        };
+        return SuccessResponse(
+          'Succesfully Update Data',
+          contact.statusCode,
+          contact.data,
+        );
       } else if (contact.statusCode == 404) {
         this.logger.log('Error updating data. Data not found.');
-        return {
-          message: 'Error Update Data',
-          statusCode: contact.statusCode,
-          data: contact.data,
-        };
+        return ErrorResponse(
+          'Error Update Data',
+          contact.statusCode,
+          contact.data,
+        );
       } else if (contact.statusCode == 204) {
         this.logger.log('Error updating data. Data does not exist.');
-        return {
-          message: 'Error Update Data Doesnt Exist',
-          statusCode: contact.statusCode,
-          data: contact.data,
-        };
+        return ErrorResponse(
+          'Error Update Data Doesnt Exist',
+          contact.statusCode,
+          contact.data,
+        );
       } else if (contact.statusCode == 403) {
         this.logger.log('Error updating data. Permission denied.');
-        return {
-          message: 'Error Update Data, Permission Denied',
-          statusCode: contact.statusCode,
-          data: contact.data,
-        };
+        return ErrorResponse(
+          'Error Update Data, Permission Denied',
+          contact.statusCode,
+          contact.data,
+        );
       } else if (contact.statusCode == 500) {
         this.logger.log('Error updating data. Server error.');
-        return {
-          message: 'Error Update Data',
-          statusCode: contact.statusCode,
-          data: contact.data,
-        };
+        return ErrorResponse(
+          'Error Update Data',
+          contact.statusCode,
+          contact.data,
+        );
       }
     } catch (err) {
       this.logger.log('An error occurred:', err);
-      return {
-        message: err,
-        statusCode: 500,
-        data: 'null',
-      };
+      return ErrorResponse(err, 500, 'null');
     }
   }
 
@@ -213,47 +202,43 @@ export class ContactsController {
       );
       if (contact.statusCode == 200) {
         this.logger.log('Successfully deleted data.');
-        return {
-          message: 'Succesfully Delete Data',
-          statusCode: contact.statusCode,
-          data: contact.data,
-        };
+        return SuccessResponse(
+          'Succesfully Delete Data',
+          contact.statusCode,
+          contact.data,
+        );
       } else if (contact.statusCode == 404) {
         this.logger.log('Error deleting data. Data not found.');
-        return {
-          message: 'Error Delete Data',
-          statusCode: contact.statusCode,
-          data: contact.data,
-        };
+        return ErrorResponse(
+          'Error Delete Data',
+          contact.statusCode,
+          contact.data,
+        );
       } else if (contact.statusCode == 403) {
         this.logger.log('Error deleting data. Permission denied.');
-        return {
-          message: 'Error Delete Data, Permission Denied',
-          statusCode: contact.statusCode,
-          data: contact.data,
-        };
+        return ErrorResponse(
+          'Error Delete Data, Permission Denied',
+          contact.statusCode,
+          contact.data,
+        );
       } else if (contact.statusCode == 204) {
         this.logger.log('Error deleting data. Data does not exist.');
-        return {
-          message: 'Error Delete Data, Data Doesnt Exist',
-          statusCode: contact.statusCode,
-          data: contact.data,
-        };
+        return ErrorResponse(
+          'Error Delete Data, Data Doesnt Exist',
+          contact.statusCode,
+          contact.data,
+        );
       } else if (contact.statusCode == 500) {
         this.logger.log('Error deleting data. Server error.');
-        return {
-          message: 'Error When Delete Data',
-          statusCode: contact.statusCode,
-          data: contact.data,
-        };
+        return ErrorResponse(
+          'Error When Delete Data',
+          contact.statusCode,
+          contact.data,
+        );
       }
     } catch (err) {
       this.logger.log('An error occurred:', err);
-      return {
-        message: err,
-        statusCode: 500,
-        data: 'null',
-      };
+      return ErrorResponse(err, 500, 'null');
     }
   }
 
@@ -273,40 +258,36 @@ export class ContactsController {
 
       if (contact.statusCode == 200) {
         this.logger.log('Successfully retrieved data.');
-        return {
-          message: 'Succesfully Get Data',
-          statusCode: contact.statusCode,
-          data: contact.data,
-        };
+        return SuccessResponse(
+          'Succesfully Get Data',
+          contact.statusCode,
+          contact.data,
+        );
       } else if (contact.statusCode == 204) {
         this.logger.log('Data not found.');
-        return {
-          message: 'Succesfully But Get No Data',
-          statusCode: contact.statusCode,
-          data: contact.data,
-        };
+        return SuccessResponse(
+          'Succesfully But Get No Data',
+          contact.statusCode,
+          contact.data,
+        );
       } else if (contact.statusCode == 403) {
         this.logger.log('Error getting data. Permission denied.');
-        return {
-          message: 'Error Get Data, Permission Denied',
-          statusCode: contact.statusCode,
-          data: contact.data,
-        };
+        return ErrorResponse(
+          'Error Get Data, Permission Denied',
+          contact.statusCode,
+          contact.data,
+        );
       } else if (contact.statusCode == 500) {
         this.logger.log('Error getting data. Server error.');
-        return {
-          message: 'Error When Get Data',
-          statusCode: contact.statusCode,
-          data: contact.data,
-        };
+        return ErrorResponse(
+          'Error When Get Data',
+          contact.statusCode,
+          contact.data,
+        );
       }
     } catch (err) {
       this.logger.log('An error occurred:', err);
-      return {
-        message: err,
-        statusCode: 500,
-        data: 'null',
-      };
+      return ErrorResponse(err, 500, 'null');
     }
   }
 }
