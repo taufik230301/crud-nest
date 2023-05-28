@@ -3,7 +3,7 @@ import Contacts from './entity/contact.entity';
 import { DataSource, FindManyOptions } from 'typeorm';
 import CreateContactsDto from './dto/createContacts.dto';
 import UpdateContactsDto from './dto/updateContacts.dto';
-import { ADMIN_USER_LEVEL } from './contact.constant';
+import { ADMIN_USER_LEVEL } from '../auth/auth.constant';
 import {
   createContactInDatabase,
   createWhereOptions,
@@ -175,19 +175,9 @@ export class ContactsService {
     }
   }
 
-  async updateContacts(
-    id_contacts: string,
-    contacts: UpdateContactsDto,
-    user_id: number,
-    user_level: number,
-  ) {
+  async updateContacts(id_contacts: string, contacts: UpdateContactsDto) {
     this.logger.log('updateContacts function called.');
     this.logger.log('Creating options object');
-    const options: FindManyOptions<Contacts> = {
-      where: {
-        id_contacts: id_contacts,
-      },
-    };
     this.logger.log('Creating queryRunner.');
     const queryRunner = this.dataSource.createQueryRunner();
     try {
@@ -195,56 +185,20 @@ export class ContactsService {
       await queryRunner.connect();
       this.logger.log('Starting database transaction.');
       await queryRunner.startTransaction();
-      const currentContacts = await queryRunner.manager.find(Contacts, options);
-      this.logger.log('Checking If contacts found in the database.');
-      if (currentContacts.length > 0) {
-        this.logger.log('Checking If Permission is admin.');
-        if (user_level == ADMIN_USER_LEVEL) {
-          this.logger.log('Updating contacts in the database.');
-          const updated_contact = await updateContactInDatabase(
-            queryRunner,
-            contacts,
-            id_contacts,
-          );
-          this.logger.log('Checking if any affected records were updated');
-          if (updated_contact.affected) {
-            this.logger.log('Committing database transaction.');
-            await queryRunner.commitTransaction();
-            return { data: contacts, statusCode: 200 };
-          } else {
-            this.logger.log('Rolling back database transaction.');
-            await queryRunner.rollbackTransaction();
-            return { data: contacts, statusCode: 404 };
-          }
-        } else {
-          this.logger.log('Checking If Updated Contacts Belongs to user.');
-          if (currentContacts[0].user_id == user_id) {
-            this.logger.log('Updating contacts in the database.');
-            const updated_contact = await updateContactInDatabase(
-              queryRunner,
-              contacts,
-              id_contacts,
-            );
-            this.logger.log('Checking if any affected records were updated');
-            if (updated_contact.affected) {
-              this.logger.log('Committing database transaction.');
-              await queryRunner.commitTransaction();
-              return { data: contacts, statusCode: 200 };
-            } else {
-              this.logger.log('Rolling back database transaction.');
-              await queryRunner.rollbackTransaction();
-              return { data: contacts, statusCode: 404 };
-            }
-          } else {
-            this.logger.log('Rolling back database transaction.');
-            await queryRunner.rollbackTransaction();
-            return { data: contacts, statusCode: 403 };
-          }
-        }
+      const updated_contact = await updateContactInDatabase(
+        queryRunner,
+        contacts,
+        id_contacts,
+      );
+      this.logger.log('Checking if any affected records were updated');
+      if (updated_contact.affected) {
+        this.logger.log('Committing database transaction.');
+        await queryRunner.commitTransaction();
+        return { data: contacts, statusCode: 200 };
       } else {
         this.logger.log('Rolling back database transaction.');
         await queryRunner.rollbackTransaction();
-        return { data: contacts, statusCode: 204 };
+        return { data: contacts, statusCode: 404 };
       }
     } catch (err) {
       this.logger.log(
@@ -259,11 +213,7 @@ export class ContactsService {
     }
   }
 
-  async deleteContact(
-    id_contacts: string,
-    user_id: number,
-    user_level: number,
-  ) {
+  async deleteContact(id_contacts: string) {
     this.logger.log('deleteContact function called.');
     this.logger.log('Creating options object');
     const options: FindManyOptions<Contacts> = {
@@ -282,52 +232,16 @@ export class ContactsService {
       const deletedContacts = await queryRunner.manager.find(Contacts, options);
 
       this.logger.log('Checking if contacts found in the database.');
-      if (deletedContacts.length > 0) {
-        this.logger.log('Checking If Permission is admin.');
-        if (user_level == ADMIN_USER_LEVEL) {
-          this.logger.log('Deleting contact from the database.');
-          const deleted = await deleteContactInDatabase(
-            queryRunner,
-            id_contacts,
-          );
-          this.logger.log('Checking if any affected records were deleted');
-          if (deleted.affected) {
-            this.logger.log('Committing database transaction.');
-            await queryRunner.commitTransaction();
-            return { data: deletedContacts, statusCode: 200 };
-          } else {
-            this.logger.log('Rolling back database transaction.');
-            await queryRunner.rollbackTransaction();
-            return { data: deletedContacts, statusCode: 404 };
-          }
-        } else {
-          this.logger.log('Checking If Deleted Contacts Belongs to user.');
-          if (deletedContacts[0].user_id == user_id) {
-            this.logger.log('Deleting contact from the database.');
-            const deleted = await deleteContactInDatabase(
-              queryRunner,
-              id_contacts,
-            );
-            this.logger.log('Checking if any affected records were deleted');
-            if (deleted.affected) {
-              this.logger.log('Committing database transaction.');
-              await queryRunner.commitTransaction();
-              return { data: deletedContacts, statusCode: 200 };
-            } else {
-              this.logger.log('Rolling back database transaction.');
-              await queryRunner.rollbackTransaction();
-              return { data: deletedContacts, statusCode: 404 };
-            }
-          } else {
-            this.logger.log('Rolling back database transaction.');
-            await queryRunner.rollbackTransaction();
-            return { data: deletedContacts, statusCode: 403 };
-          }
-        }
+      const deleted = await deleteContactInDatabase(queryRunner, id_contacts);
+      this.logger.log('Checking if any affected records were deleted');
+      if (deleted.affected) {
+        this.logger.log('Committing database transaction.');
+        await queryRunner.commitTransaction();
+        return { data: deletedContacts, statusCode: 200 };
       } else {
         this.logger.log('Rolling back database transaction.');
         await queryRunner.rollbackTransaction();
-        return { data: deletedContacts, statusCode: 204 };
+        return { data: deletedContacts, statusCode: 404 };
       }
     } catch (err) {
       this.logger.log(

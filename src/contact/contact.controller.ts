@@ -19,6 +19,7 @@ import CreateContactsDto from './dto/createContacts.dto';
 import UpdateContactsDto from './dto/updateContacts.dto';
 import { ErrorResponse, SuccessResponse } from './utils/contact.utils';
 import { CheckAdminPermissions } from 'src/auth/decorator/admin-permission.decorator';
+import { AdminGuard } from 'src/auth/admin-auth.guard';
 
 @Controller('contacts')
 export class ContactsController {
@@ -112,22 +113,19 @@ export class ContactsController {
     }
   }
 
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, AdminGuard)
   @Put(':id_contacts')
   @UsePipes(new ValidationPipe({}))
   async updateContacts(
     @Param('id_contacts')
     id_contacts: string,
     @Body() contacts: UpdateContactsDto,
-    @Req() request: any,
   ) {
     try {
       this.logger.log('updateContacts function called.');
       const contact = await this.contactsService.updateContacts(
         String(id_contacts),
         contacts,
-        request.user.user_id,
-        request.user.user_level,
       );
 
       if (contact.statusCode == 200) {
@@ -172,18 +170,13 @@ export class ContactsController {
     }
   }
 
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, AdminGuard)
   @Delete(':id_contacts')
-  async deleteContact(
-    @Param('id_contacts') id_contacts: string,
-    @Req() request,
-  ) {
+  async deleteContact(@Param('id_contacts') id_contacts: string) {
     try {
       this.logger.log('deleteContact function called.');
       const contact = await this.contactsService.deleteContact(
         String(id_contacts),
-        request.user.user_id,
-        request.user.user_level,
       );
       if (contact.statusCode == 200) {
         this.logger.log('Successfully deleted data.');

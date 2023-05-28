@@ -1,3 +1,5 @@
 export const jwtConstants = {
   secret: 'B8A38B5EEEA8BA9D66A9F65222384BB94BB7D420DB9DB41C595C4B991DA1B1E5',
 };
+
+export const ADMIN_USER_LEVEL = 0;

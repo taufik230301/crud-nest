@@ -2,7 +2,7 @@ import { FindManyOptions, QueryRunner } from 'typeorm';
 import CreateContactsDto from '../dto/createContacts.dto';
 import UpdateContactsDto from '../dto/updateContacts.dto';
 import Contacts from '../entity/contact.entity';
-import { ADMIN_USER_LEVEL } from '../contact.constant';
+import { ADMIN_USER_LEVEL } from '../../auth/auth.constant';
 
 export async function createContactInDatabase(
   queryRunner: QueryRunner,

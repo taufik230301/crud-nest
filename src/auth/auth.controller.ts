@@ -11,6 +11,7 @@ import {
 import { AuthService } from '../auth/auth.service';
 import { LoginUsersDto } from '../user/dto/loginUsers.dto';
 import CreateUsersDto from 'src/user/dto/createUsers.dto';
+import { AuthUtils } from '../auth/utils/auth.utlis';
 
 @Controller('auth')
 export class AuthController {
@@ -31,7 +32,7 @@ export class AuthController {
         userData.password,
       );
 
-      return this.handleAuthenticationResult(result, userData.username);
+      return AuthUtils.handleAuthenticationResult(result, userData.username);
     } catch (err) {
       this.logger.error(
         `Error occurred during login for username: ${userData.username}`,
@@ -53,7 +54,7 @@ export class AuthController {
       this.logger.log(`Registering user '${userData.username}'...`);
       const result = await this.authService.signUp(userData);
 
-      return this.handleRegistrationResult(result, userData.username);
+      return AuthUtils.handleRegistrationResult(result, userData.username);
     } catch (err) {
       this.logger.log('An error occurred during user registration:', err);
       return {
@@ -62,49 +63,5 @@ export class AuthController {
         access_token: 'null',
       };
     }
-  }
-
-  private handleAuthenticationResult(result: any, username: string) {
-    const response = {
-      message: '',
-      statusCode: result.statusCode,
-      access_token: result.access_token,
-    };
-
-    switch (result.statusCode) {
-      case 200:
-        this.logger.log(`User '${username}' successfully logged in`);
-        response.message = 'Success Login';
-        break;
-      case 401:
-        response.message = `Cannot login, password doesn't match`;
-        break;
-      case 404:
-        response.message = `Cannot login, user '${username}' not exists`;
-        break;
-      default:
-        response.message = 'Error occurred.';
-        break;
-    }
-
-    return response;
-  }
-
-  private handleRegistrationResult(result: any, username: string) {
-    const response = {
-      message: '',
-      statusCode: result.statusCode,
-      data: result.data,
-    };
-
-    if (result.statusCode === 200) {
-      this.logger.log(`User '${username}' registered successfully.`);
-      response.message = 'Register Successfully';
-    } else {
-      this.logger.log(`Failed to register user '${username}'.`);
-      response.message = 'Register Error';
-    }
-
-    return response;
   }
 }

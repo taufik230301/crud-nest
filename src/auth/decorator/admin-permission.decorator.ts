@@ -1,5 +1,5 @@
-import { createParamDecorator, ExecutionContext, Logger } from '@nestjs/common';
-import { ADMIN_USER_LEVEL } from '../../contact/contact.constant';
+import { createParamDecorator, ExecutionContext } from '@nestjs/common';
+import { ADMIN_USER_LEVEL } from '../../auth/auth.constant';
 
 export const CheckAdminPermissions = createParamDecorator(
   (user: string, ctx: ExecutionContext) => {
