@@ -19,42 +19,33 @@ export class AdminGuard implements CanActivate {
     this.logger.debug('Checking admin permissions');
     if (user_level == ADMIN_USER_LEVEL) {
       this.logger.debug('Admin user detected. Granting access.');
+
+      if (request.body.user_id === undefined && request.route.methods.post) {
+        this.logger.debug('Admin user_id is null. Access denied.');
+        return false;
+      }
       request['user'] = resRequest;
       return true;
     } else {
       if (!request.route.methods.get) {
-        this.logger.debug(
-          'Regular user detected. Checking contact permission.',
-        );
-        const contactId = request.params.id_contacts;
-        const contact = await this.contactsService.getContactsById(
-          contactId,
-          user_id,
-        );
+        request.body.user_id = user_id;
+      }
 
-        if (contact.data.length == 0) {
-          this.logger.debug('Contact not found. Access denied.');
-          return false; // Contact does not exist, deny access
-        } else {
-          this.logger.debug('Contact permission granted.');
-          return true;
-        }
+      this.logger.debug(
+        'Regular user detected. Access granted for non-edit request.',
+      );
+
+      const contactId = request.params.id_contacts;
+      const contact = await this.contactsService.getContactsById(
+        contactId,
+        user_id,
+      );
+      if (contact.data.length == 0) {
+        this.logger.debug('Contact not found. Access denied.');
+        return false;
       } else {
-        this.logger.debug(
-          'Regular user detected. Access granted for non-edit request.',
-        );
-        const contactId = request.params.id_contacts;
-        const contact = await this.contactsService.getContactsById(
-          contactId,
-          user_id,
-        );
-        if (contact.data.length == 0) {
-          this.logger.debug('Contact not found. Access denied.');
-          return false;
-        } else {
-          this.logger.debug('Contact permission granted.');
-          return true;
-        }
+        this.logger.debug('Contact permission granted.');
+        return true;
       }
     }
   }

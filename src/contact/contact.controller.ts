@@ -18,7 +18,6 @@ import { AuthGuard } from 'src/auth/auth.guard';
 import CreateContactsDto from './dto/createContacts.dto';
 import UpdateContactsDto from './dto/updateContacts.dto';
 import { ErrorResponse, SuccessResponse } from './utils/contact.utils';
-import { CheckAdminPermissions } from 'src/auth/decorator/admin-permission.decorator';
 import { AdminGuard } from 'src/auth/admin-auth.guard';
 
 @Controller('contacts')
@@ -71,24 +70,13 @@ export class ContactsController {
     }
   }
 
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, AdminGuard)
   @Post()
   @UsePipes(new ValidationPipe({}))
-  async createContacts(@CheckAdminPermissions('user') request: any) {
+  async createContacts(@Body() contactData: CreateContactsDto) {
     try {
       this.logger.log('createContacts function called.');
-      const user_id = request.contactData.user_id;
 
-      if (!user_id) {
-        this.logger.log('An error occurred: user_id cannot be null');
-        return ErrorResponse(
-          'Error Create Data, user_id cannot be null',
-          404,
-          'null',
-        );
-      }
-
-      const contactData: CreateContactsDto = { ...request.body, user_id };
       const contact = await this.contactsService.createContacts(contactData);
 
       if (contact.statusCode == 200) {
