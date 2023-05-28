@@ -17,8 +17,8 @@ import { ContactsService } from './contact.service';
 import { AuthGuard } from 'src/auth/auth.guard';
 import CreateContactsDto from './dto/createContacts.dto';
 import UpdateContactsDto from './dto/updateContacts.dto';
-import { ADMIN_USER_LEVEL } from './contact.constant';
 import { ErrorResponse, SuccessResponse } from './utils/contact.utils';
+import { CheckAdminPermissions } from 'src/auth/decorator/admin-permission.decorator';
 
 @Controller('contacts')
 export class ContactsController {
@@ -74,37 +74,22 @@ export class ContactsController {
   @UseGuards(AuthGuard)
   @Post()
   @UsePipes(new ValidationPipe({}))
-  async createContacts(
-    @Body() contacts: CreateContactsDto,
-    @Req() request: any,
-  ) {
+  async createContacts(@CheckAdminPermissions('user') request: any) {
     try {
-      this.logger.log('Extracting user_id from request:', request.user);
-      const { user_id } = request.user;
+      this.logger.log('createContacts function called.');
+      const user_id = request.contactData.user_id;
 
-      this.logger.log('Checking if permisions is admin');
-      if (request.user.user_level == ADMIN_USER_LEVEL) {
-        this.logger.log('Checking if user_id is null');
-        if (contacts.user_id) {
-          this.contact_data = contacts;
-          this.logger.log('Creating contact:', this.contact_data);
-        } else {
-          this.logger.log('An error occurred: user_id cannot be null');
-          return ErrorResponse(
-            'Error Create Data, user_id cannot be null',
-            400,
-            'null',
-          );
-        }
-      } else {
-        this.contact_data = { ...contacts, user_id };
-        this.logger.log('Creating contact:', this.contact_data);
+      if (!user_id) {
+        this.logger.log('An error occurred: user_id cannot be null');
+        return ErrorResponse(
+          'Error Create Data, user_id cannot be null',
+          404,
+          'null',
+        );
       }
 
-      this.logger.log('createContacts function called.');
-      const contact = await this.contactsService.createContacts(
-        this.contact_data,
-      );
+      const contactData: CreateContactsDto = { ...request.body, user_id };
+      const contact = await this.contactsService.createContacts(contactData);
 
       if (contact.statusCode == 200) {
         this.logger.log('Successfully created data.');
@@ -114,7 +99,7 @@ export class ContactsController {
           contact.data,
         );
       } else {
-        this.logger.log('Successfully created data.');
+        this.logger.log('Error Create Data.');
         return ErrorResponse(
           'Error Create Data',
           contact.statusCode,

@@ -14,7 +14,7 @@ export class AuthGuard implements CanActivate {
   constructor(private jwtService: JwtService) {}
   private readonly logger = new Logger(AuthGuard.name);
 
-  async canActivate(context: ExecutionContext): Promise<boolean> {
+  async canActivate(context: ExecutionContext): Promise<any> {
     const request = context.switchToHttp().getRequest();
     this.logger.debug('Extracted request object from execution context');
     const token = this.extractTokenFromHeader(request);

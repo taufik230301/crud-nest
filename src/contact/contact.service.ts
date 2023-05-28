@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import Contacts from './entity/contact.entity';
-import { DataSource, FindManyOptions, QueryRunner } from 'typeorm';
+import { DataSource, FindManyOptions } from 'typeorm';
 import CreateContactsDto from './dto/createContacts.dto';
 import UpdateContactsDto from './dto/updateContacts.dto';
 import { ADMIN_USER_LEVEL } from './contact.constant';
