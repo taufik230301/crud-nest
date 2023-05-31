@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { ContactsService } from '../contact/contact.service';
 import { ADMIN_USER_LEVEL } from '../auth/auth.constant';
+import { AuthUtils } from './utils/auth.utlis';
 
 @Injectable()
 export class AdminGuard implements CanActivate {
@@ -18,35 +19,13 @@ export class AdminGuard implements CanActivate {
 
     this.logger.debug('Checking admin permissions');
     if (user_level == ADMIN_USER_LEVEL) {
-      this.logger.debug('Admin user detected. Granting access.');
-
-      if (request.body.user_id === undefined && request.route.methods.post) {
-        this.logger.debug('Admin user_id is null. Access denied.');
-        return false;
-      }
-      request['user'] = resRequest;
-      return true;
+      return AuthUtils.checkContactAdminPermission(request, resRequest);
     } else {
-      if (!request.route.methods.get) {
-        request.body.user_id = user_id;
-      }
-
-      this.logger.debug(
-        'Regular user detected. Access granted for non-edit request.',
-      );
-
-      const contactId = request.params.id_contacts;
-      const contact = await this.contactsService.getContactsById(
-        contactId,
+      return AuthUtils.checkContactPermission(
+        request,
         user_id,
+        this.contactsService,
       );
-      if (contact.data.length == 0) {
-        this.logger.debug('Contact not found. Access denied.');
-        return false;
-      } else {
-        this.logger.debug('Contact permission granted.');
-        return true;
-      }
     }
   }
 }

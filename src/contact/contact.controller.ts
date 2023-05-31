@@ -34,7 +34,7 @@ export class ContactsController {
     @Query('contacts_name') contacts_name: string,
   ) {
     try {
-      this.logger.log('getContacts function called.');
+      this.logger.verbose('getContacts function called.');
       const contact = await this.contactsService.getAllContacts(
         request.user.user_id,
         account_number,
@@ -49,7 +49,7 @@ export class ContactsController {
         contact.data,
       );
     } catch (err) {
-      this.logger.log('An error occurred:', err);
+      this.logger.error('An error occurred:', err);
       return ContactUtils.ErrorResponse(err, 500, 'null');
     }
   }
@@ -59,7 +59,7 @@ export class ContactsController {
   @UsePipes(new ValidationPipe({}))
   async createContacts(@Body() contactData: CreateContactsDto) {
     try {
-      this.logger.log('createContacts function called.');
+      this.logger.verbose('createContacts function called.');
 
       const contact = await this.contactsService.createContacts(contactData);
 
@@ -70,7 +70,7 @@ export class ContactsController {
         contact.data,
       );
     } catch (err) {
-      this.logger.log('An error occurred:', err);
+      this.logger.error('An error occurred:', err);
       return ContactUtils.ErrorResponse(err, 500, 'null');
     }
   }
@@ -97,7 +97,7 @@ export class ContactsController {
         contact.data,
       );
     } catch (err) {
-      this.logger.log('An error occurred:', err);
+      this.logger.error('An error occurred:', err);
       return ContactUtils.ErrorResponse(err, 500, 'null');
     }
   }
@@ -106,7 +106,7 @@ export class ContactsController {
   @Delete(':id_contacts')
   async deleteContact(@Param('id_contacts') id_contacts: string) {
     try {
-      this.logger.log('deleteContact function called.');
+      this.logger.verbose('deleteContact function called.');
       const contact = await this.contactsService.deleteContact(
         String(id_contacts),
       );
@@ -117,7 +117,7 @@ export class ContactsController {
         contact.data,
       );
     } catch (err) {
-      this.logger.log('An error occurred:', err);
+      this.logger.error('An error occurred:', err);
       return ContactUtils.ErrorResponse(err, 500, 'null');
     }
   }
@@ -129,7 +129,7 @@ export class ContactsController {
     @Req() request: any,
   ) {
     try {
-      this.logger.log('getContactById function called.');
+      this.logger.verbose('getContactById function called.');
       const contact = await this.contactsService.getContactsById(
         String(id_contacts),
         request.user.user_id,
@@ -142,7 +142,7 @@ export class ContactsController {
         contact.data,
       );
     } catch (err) {
-      this.logger.log('An error occurred:', err);
+      this.logger.error('An error occurred:', err);
       return ContactUtils.ErrorResponse(err, 500, 'null');
     }
   }

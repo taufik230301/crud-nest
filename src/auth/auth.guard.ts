@@ -31,7 +31,7 @@ export class AuthGuard implements CanActivate {
       request['user'] = payload;
       this.logger.debug('Assigned payload to the request object');
     } catch {
-      this.logger.warn('Invalid authorization token');
+      this.logger.error('Invalid authorization token');
       throw new UnauthorizedException();
     }
     this.logger.debug('User is authorized');

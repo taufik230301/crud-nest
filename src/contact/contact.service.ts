@@ -60,7 +60,7 @@ export class ContactsService {
         return { data: contacts, statusCode: 404 };
       }
     } catch (err) {
-      this.logger.log('Error occurred. Rolling back database transaction.');
+      this.logger.error('Error occurred. Rolling back database transaction.');
       await queryRunner.rollbackTransaction();
       return { data: err, statusCode: 500 };
     } finally {
@@ -93,7 +93,7 @@ export class ContactsService {
         return { data: contacts, statusCode: 404 };
       }
     } catch (err) {
-      this.logger.log('Error occurred. Rolling back database transaction.');
+      this.logger.error('Error occurred. Rolling back database transaction.');
       await queryRunner.rollbackTransaction();
       return { data: err, statusCode: 500 };
     } finally {
@@ -135,7 +135,7 @@ export class ContactsService {
         return { data: contacts, statusCode: 404 };
       }
     } catch (err) {
-      this.logger.log(
+      this.logger.error(
         'Error occurred. Rolling back database transaction.',
         err,
       );
@@ -173,7 +173,7 @@ export class ContactsService {
         return { data: contacts, statusCode: 404 };
       }
     } catch (err) {
-      this.logger.log(
+      this.logger.error(
         'Error occurred. Rolling back database transaction.',
         err,
       );
@@ -219,7 +219,7 @@ export class ContactsService {
         return { data: deletedContacts, statusCode: 404 };
       }
     } catch (err) {
-      this.logger.log(
+      this.logger.error(
         'Error occurred. Rolling back database transaction.',
         err,
       );
