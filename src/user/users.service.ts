@@ -29,7 +29,7 @@ export class UserService {
         };
       }
     } catch (error) {
-      this.logger.log(`Error occurred`);
+      this.logger.error(`Error occurred`);
       return {
         data: error,
         statusCode: 500,
@@ -57,7 +57,7 @@ export class UserService {
         };
       }
     } catch (error) {
-      this.logger.log('Error occurred while creating user.', error);
+      this.logger.error('Error occurred while creating user.', error);
       return {
         data: error,
         statusCode: 500,

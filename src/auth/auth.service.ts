@@ -3,6 +3,8 @@ import { UserService } from '../user/users.service';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import CreateUsersDto from 'src/user/dto/createUsers.dto';
+import { jwtConstants } from './auth.constant';
+import { AuthUtils } from './utils/auth.utlis';
 
 @Injectable()
 export class AuthService {
@@ -20,20 +22,13 @@ export class AuthService {
       if (user.data) {
         this.logger.log(`user '${username}' exists`);
         this.logger.log('checking password....');
-        const res = await bcrypt.compare(password, user.data.password);
-        if (res) {
+        const PasswordMatch = await bcrypt.compare(
+          password,
+          user.data.password,
+        );
+        if (PasswordMatch) {
           this.logger.log('password match');
-          const payload = {
-            user_level: user.data.user_level,
-            user_id: user.data.user_id,
-          };
-          this.logger.log('creating token...');
-          const token: string = await this.jwtService.signAsync(payload);
-          this.logger.log('token created');
-          return {
-            statusCode: 200,
-            access_token: token,
-          };
+          return AuthUtils.getTokens(user, this.jwtService);
         } else {
           this.logger.log('password not match');
           return {
@@ -49,7 +44,7 @@ export class AuthService {
         };
       }
     } catch (error) {
-      this.logger.log(`Error occurred`);
+      this.logger.error(`Error occurred`);
       return {
         statusCode: 500,
         access_token: 'null',
@@ -85,7 +80,7 @@ export class AuthService {
         };
       }
     } catch (error) {
-      this.logger.log('An error occurred during sign up:', error);
+      this.logger.error('An error occurred during sign up:', error);
       return {
         data: error,
         statusCode: 500,

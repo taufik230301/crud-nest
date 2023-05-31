@@ -23,7 +23,7 @@ export class AuthController {
   @UsePipes(new ValidationPipe({ transform: false }))
   async signIn(@Body() userData: LoginUsersDto) {
     try {
-      this.logger.log(
+      this.logger.verbose(
         `Received login request for username: ${userData.username}`,
       );
       this.logger.log('signIn function called.');
@@ -56,7 +56,7 @@ export class AuthController {
 
       return AuthUtils.handleRegistrationResult(result, userData.username);
     } catch (err) {
-      this.logger.log('An error occurred during user registration:', err);
+      this.logger.error('An error occurred during user registration:', err);
       return {
         message: err,
         statusCode: 500,

@@ -1,33 +1,31 @@
-import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
+import {
+  CanActivate,
+  ExecutionContext,
+  Injectable,
+  Logger,
+} from '@nestjs/common';
 import { ContactsService } from '../contact/contact.service';
 import { ADMIN_USER_LEVEL } from '../auth/auth.constant';
+import { AuthUtils } from './utils/auth.utlis';
 
 @Injectable()
 export class AdminGuard implements CanActivate {
+  private readonly logger = new Logger(AdminGuard.name);
   constructor(private readonly contactsService: ContactsService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
-    const { user_level, user_id } = request.user;
+    const { user_level, user_id, ...resRequest } = request.user;
 
-    if (user_level === ADMIN_USER_LEVEL) {
-      request.user_level = ADMIN_USER_LEVEL;
-      request.user_id = '';
-      return true; // Admin user has permission, allow access
+    this.logger.debug('Checking admin permissions');
+    if (user_level == ADMIN_USER_LEVEL) {
+      return AuthUtils.checkContactAdminPermission(request, resRequest);
+    } else {
+      return AuthUtils.checkContactPermission(
+        request,
+        user_id,
+        this.contactsService,
+      );
     }
-
-    // Regular user, check if they have permission to edit the contact
-    const contactId = request.params.id_contacts; // Assuming the contact ID is passed as a route parameter
-    const contact = await this.contactsService.getContactsById(
-      contactId,
-      user_id,
-      user_level,
-    );
-
-    if (contact.data.length == 0) {
-      return false; // Contact does not exist, deny access
-    }
-
-    return true; // Regular user does not have permission, deny access
   }
 }
